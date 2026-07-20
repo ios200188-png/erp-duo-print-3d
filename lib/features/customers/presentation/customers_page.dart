@@ -70,9 +70,10 @@ class _CustomersPageState extends ConsumerState<CustomersPage> {
                         ),
                         title: Text(customer.name),
                         subtitle: Text(
-                          [customer.phone, customer.email]
-                              .where((item) => item.isNotEmpty)
-                              .join(' • '),
+                          [
+                            customer.phone,
+                            customer.email,
+                          ].where((item) => item.isNotEmpty).join(' • '),
                         ),
                         onTap: () =>
                             context.go('/customers/${customer.id}/edit'),

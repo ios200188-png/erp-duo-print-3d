@@ -70,6 +70,11 @@ class _CashFlowPageState extends ConsumerState<CashFlowPage> {
         .load(start: range.start, end: range.end);
   }
 
+  // Remover este bloco inteiro
+  void _reload() {
+    setState(() => _future = _load());
+  }
+
   Future<void> _selectCustomRange() async {
     final now = DateTime.now();
     final selected = await showDateRangePicker(

@@ -123,8 +123,9 @@ class _QuoteFormPageState extends ConsumerState<QuoteFormPage> {
                     const SizedBox(height: 12),
                     DropdownButtonFormField<int>(
                       initialValue: _filamentId,
-                      decoration:
-                          const InputDecoration(labelText: 'Filamento *'),
+                      decoration: const InputDecoration(
+                        labelText: 'Filamento *',
+                      ),
                       items: filamentItems
                           .map(
                             (item) => DropdownMenuItem(
@@ -164,10 +165,12 @@ class _QuoteFormPageState extends ConsumerState<QuoteFormPage> {
                           return;
                         }
 
-                        final project = projectItems
-                            .firstWhere((item) => item.id == _projectId);
-                        final filament = filamentItems
-                            .firstWhere((item) => item.id == _filamentId);
+                        final project = projectItems.firstWhere(
+                          (item) => item.id == _projectId,
+                        );
+                        final filament = filamentItems.firstWhere(
+                          (item) => item.id == _filamentId,
+                        );
 
                         setState(() {
                           _calculation = const QuoteCalculator().calculate(
@@ -189,21 +192,19 @@ class _QuoteFormPageState extends ConsumerState<QuoteFormPage> {
                     ),
                     if (_calculation != null) ...[
                       const SizedBox(height: 18),
-                      _ResultCard(
-                        calculation: _calculation!,
-                        money: money,
-                      ),
+                      _ResultCard(calculation: _calculation!, money: money),
                       const SizedBox(height: 12),
                       FilledButton.icon(
                         onPressed: () async {
-                          await ref.read(quoteRepositoryProvider).save(
+                          await ref
+                              .read(quoteRepositoryProvider)
+                              .save(
                                 customerId: _customerId!,
                                 projectId: _projectId!,
                                 filamentId: _filamentId!,
                                 quantity: _integer(_quantity.text),
                                 laborMinutes: _integer(_laborMinutes.text),
-                                additionalCost:
-                                    _number(_additionalCost.text),
+                                additionalCost: _number(_additionalCost.text),
                                 calculation: _calculation!,
                                 notes: _notes.text.trim(),
                               );
@@ -253,10 +254,7 @@ class _QuoteFormPageState extends ConsumerState<QuoteFormPage> {
 }
 
 class _ResultCard extends StatelessWidget {
-  const _ResultCard({
-    required this.calculation,
-    required this.money,
-  });
+  const _ResultCard({required this.calculation, required this.money});
 
   final QuoteCalculation calculation;
   final NumberFormat money;
@@ -282,9 +280,9 @@ class _ResultCard extends StatelessWidget {
             Text(
               money.format(calculation.salePrice),
               style: Theme.of(context).textTheme.headlineMedium?.copyWith(
-                    fontWeight: FontWeight.w900,
-                    color: Theme.of(context).colorScheme.primary,
-                  ),
+                fontWeight: FontWeight.w900,
+                color: Theme.of(context).colorScheme.primary,
+              ),
             ),
             const Text('PREÇO DE VENDA'),
           ],
@@ -308,9 +306,7 @@ class _ResultCard extends StatelessWidget {
           ),
           Text(
             money.format(value),
-            style: strong
-                ? const TextStyle(fontWeight: FontWeight.w800)
-                : null,
+            style: strong ? const TextStyle(fontWeight: FontWeight.w800) : null,
           ),
         ],
       ),

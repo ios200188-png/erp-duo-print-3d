@@ -17,25 +17,32 @@ class CashRepository {
     required DateTime start,
     required DateTime end,
   }) async {
-    final startMs = DateTime(start.year, start.month, start.day)
-        .millisecondsSinceEpoch;
-    final endExclusive = DateTime(end.year, end.month, end.day)
-        .add(const Duration(days: 1))
-        .millisecondsSinceEpoch;
+    final startMs = DateTime(
+      start.year,
+      start.month,
+      start.day,
+    ).millisecondsSinceEpoch;
+    final endExclusive = DateTime(
+      end.year,
+      end.month,
+      end.day,
+    ).add(const Duration(days: 1)).millisecondsSinceEpoch;
 
-    final rows = await _database.customSelect(
-      '''
+    final rows = await _database
+        .customSelect(
+          '''
       SELECT id, date, description, amount, type, category, finance_entry_id
       FROM cash_transactions
       WHERE date >= ? AND date < ?
       ORDER BY date DESC, id DESC
       ''',
-      variables: [
-        Variable.withInt(startMs),
-        Variable.withInt(endExclusive),
-      ],
-      readsFrom: const {},
-    ).get();
+          variables: [
+            Variable.withInt(startMs),
+            Variable.withInt(endExclusive),
+          ],
+          readsFrom: const {},
+        )
+        .get();
 
     return rows.map((row) => CashTransaction.fromMap(row.data)).toList();
   }
@@ -44,26 +51,34 @@ class CashRepository {
     required DateTime start,
     required DateTime end,
   }) async {
-    final startMs = DateTime(start.year, start.month, start.day)
-        .millisecondsSinceEpoch;
-    final endExclusive = DateTime(end.year, end.month, end.day)
-        .add(const Duration(days: 1))
-        .millisecondsSinceEpoch;
+    final startMs = DateTime(
+      start.year,
+      start.month,
+      start.day,
+    ).millisecondsSinceEpoch;
+    final endExclusive = DateTime(
+      end.year,
+      end.month,
+      end.day,
+    ).add(const Duration(days: 1)).millisecondsSinceEpoch;
 
-    final openingRow = await _database.customSelect(
-      '''
+    final openingRow = await _database
+        .customSelect(
+          '''
       SELECT COALESCE(SUM(
         CASE WHEN type = 'Receita' THEN amount ELSE -amount END
       ), 0) AS opening_balance
       FROM cash_transactions
       WHERE date < ?
       ''',
-      variables: [Variable.withInt(startMs)],
-      readsFrom: const {},
-    ).getSingle();
+          variables: [Variable.withInt(startMs)],
+          readsFrom: const {},
+        )
+        .getSingle();
 
-    final periodRow = await _database.customSelect(
-      '''
+    final periodRow = await _database
+        .customSelect(
+          '''
       SELECT
         COALESCE(SUM(CASE WHEN type = 'Receita' THEN amount ELSE 0 END), 0)
           AS income,
@@ -72,12 +87,13 @@ class CashRepository {
       FROM cash_transactions
       WHERE date >= ? AND date < ?
       ''',
-      variables: [
-        Variable.withInt(startMs),
-        Variable.withInt(endExclusive),
-      ],
-      readsFrom: const {},
-    ).getSingle();
+          variables: [
+            Variable.withInt(startMs),
+            Variable.withInt(endExclusive),
+          ],
+          readsFrom: const {},
+        )
+        .getSingle();
 
     return CashFlowSummary(
       openingBalance: openingRow.read<double>('opening_balance'),

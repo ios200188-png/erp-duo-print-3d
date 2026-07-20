@@ -16,8 +16,10 @@ final customerCountProvider = FutureProvider<int>((ref) async {
   return ref.watch(customerRepositoryProvider).count();
 });
 
-final customerByIdProvider =
-    FutureProvider.family<Customer?, int>((ref, id) async {
+final customerByIdProvider = FutureProvider.family<Customer?, int>((
+  ref,
+  id,
+) async {
   return ref.watch(customerRepositoryProvider).findById(id);
 });
 
@@ -49,33 +51,35 @@ class CustomerRepository {
 
     sql += ' ORDER BY name COLLATE NOCASE';
 
-    final rows = await _database.customSelect(
-      sql,
-      variables: variables,
-      readsFrom: const {},
-    ).get();
+    final rows = await _database
+        .customSelect(sql, variables: variables, readsFrom: const {})
+        .get();
 
     return rows.map((row) => Customer.fromMap(row.data)).toList();
   }
 
   Future<Customer?> findById(int id) async {
-    final row = await _database.customSelect(
-      '''
+    final row = await _database
+        .customSelect(
+          '''
       SELECT id, name, phone, email, document, notes, created_at, updated_at
       FROM customers WHERE id = ? LIMIT 1
       ''',
-      variables: [Variable<int>(id)],
-      readsFrom: const {},
-    ).getSingleOrNull();
+          variables: [Variable<int>(id)],
+          readsFrom: const {},
+        )
+        .getSingleOrNull();
 
     return row == null ? null : Customer.fromMap(row.data);
   }
 
   Future<int> count() async {
-    final row = await _database.customSelect(
-      'SELECT COUNT(*) AS total FROM customers',
-      readsFrom: const {},
-    ).getSingle();
+    final row = await _database
+        .customSelect(
+          'SELECT COUNT(*) AS total FROM customers',
+          readsFrom: const {},
+        )
+        .getSingle();
     return row.read<int>('total');
   }
 
@@ -112,9 +116,6 @@ class CustomerRepository {
   }
 
   Future<void> delete(int id) async {
-    await _database.customStatement(
-      'DELETE FROM customers WHERE id = ?',
-      [id],
-    );
+    await _database.customStatement('DELETE FROM customers WHERE id = ?', [id]);
   }
 }

@@ -13,8 +13,7 @@ class BusinessSettingsPage extends ConsumerStatefulWidget {
       _BusinessSettingsPageState();
 }
 
-class _BusinessSettingsPageState
-    extends ConsumerState<BusinessSettingsPage> {
+class _BusinessSettingsPageState extends ConsumerState<BusinessSettingsPage> {
   final _formKey = GlobalKey<FormState>();
   final _company = TextEditingController();
   final _whatsapp = TextEditingController();
@@ -47,18 +46,23 @@ class _BusinessSettingsPageState
     _power.text = value.printerPowerW.toStringAsFixed(0);
     _labor.text = value.laborHour.toStringAsFixed(2).replaceAll('.', ',');
     _machine.text = value.machineHour.toStringAsFixed(2).replaceAll('.', ',');
-    _packaging.text =
-        value.packagingCost.toStringAsFixed(2).replaceAll('.', ',');
-    _failure.text =
-        value.failurePercent.toStringAsFixed(1).replaceAll('.', ',');
-    _margin.text =
-        value.idealMarginPercent.toStringAsFixed(1).replaceAll('.', ',');
+    _packaging.text = value.packagingCost
+        .toStringAsFixed(2)
+        .replaceAll('.', ',');
+    _failure.text = value.failurePercent
+        .toStringAsFixed(1)
+        .replaceAll('.', ',');
+    _margin.text = value.idealMarginPercent
+        .toStringAsFixed(1)
+        .replaceAll('.', ',');
   }
 
   Future<void> _save() async {
     if (!_formKey.currentState!.validate()) return;
 
-    await ref.read(businessSettingsRepositoryProvider).save(
+    await ref
+        .read(businessSettingsRepositoryProvider)
+        .save(
           BusinessSettings(
             companyName: _company.text.trim(),
             whatsapp: _whatsapp.text.trim(),
@@ -116,14 +120,26 @@ class _BusinessSettingsPageState
                 ),
                 const SizedBox(height: 12),
                 _field(_kwh, 'Valor do kWh (R\$) *', number: true),
-                _field(_power, 'Consumo médio da impressora (W) *',
-                    number: true),
-                _field(_labor, 'Valor da hora de trabalho (R\$) *',
-                    number: true),
-                _field(_machine, 'Custo da máquina por hora (R\$) *',
-                    number: true),
-                _field(_packaging, 'Custo padrão da embalagem (R\$) *',
-                    number: true),
+                _field(
+                  _power,
+                  'Consumo médio da impressora (W) *',
+                  number: true,
+                ),
+                _field(
+                  _labor,
+                  'Valor da hora de trabalho (R\$) *',
+                  number: true,
+                ),
+                _field(
+                  _machine,
+                  'Custo da máquina por hora (R\$) *',
+                  number: true,
+                ),
+                _field(
+                  _packaging,
+                  'Custo padrão da embalagem (R\$) *',
+                  number: true,
+                ),
                 _field(_failure, 'Percentual de falhas (%) *', number: true),
                 _field(_margin, 'Margem ideal (%) *', number: true),
                 const SizedBox(height: 8),
@@ -158,8 +174,8 @@ class _BusinessSettingsPageState
         decoration: InputDecoration(labelText: label),
         validator: label.contains('*')
             ? (value) => value == null || value.trim().isEmpty
-                ? 'Campo obrigatório.'
-                : null
+                  ? 'Campo obrigatório.'
+                  : null
             : null,
       ),
     );

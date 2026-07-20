@@ -55,7 +55,9 @@ class _FinanceFormPageState extends ConsumerState<FinanceFormPage> {
       return;
     }
 
-    await ref.read(financeRepositoryProvider).save(
+    await ref
+        .read(financeRepositoryProvider)
+        .save(
           type: _type,
           category: _category.text.trim(),
           description: _description.text.trim(),
@@ -112,8 +114,7 @@ class _FinanceFormPageState extends ConsumerState<FinanceFormPage> {
           const SizedBox(height: 12),
           TextField(
             controller: _amount,
-            keyboardType:
-                const TextInputType.numberWithOptions(decimal: true),
+            keyboardType: const TextInputType.numberWithOptions(decimal: true),
             decoration: const InputDecoration(labelText: 'Valor (R\$) *'),
           ),
           const SizedBox(height: 12),

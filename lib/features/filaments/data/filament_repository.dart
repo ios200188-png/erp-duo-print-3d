@@ -20,8 +20,7 @@ final lowStockCountProvider = FutureProvider<int>((ref) {
   return ref.watch(filamentRepositoryProvider).lowStockCount();
 });
 
-final filamentByIdProvider =
-    FutureProvider.family<Filament?, int>((ref, id) {
+final filamentByIdProvider = FutureProvider.family<Filament?, int>((ref, id) {
   return ref.watch(filamentRepositoryProvider).findById(id);
 });
 
@@ -31,50 +30,48 @@ class FilamentRepository {
   final AppDatabase _database;
 
   Future<List<Filament>> findAll() async {
-    final rows = await _database.customSelect(
-      '''
+    final rows = await _database.customSelect('''
       SELECT id, name, material_type, brand, color, initial_weight,
              current_weight, purchase_price, minimum_stock, supplier, notes
       FROM filaments
       ORDER BY name COLLATE NOCASE
-      ''',
-      readsFrom: const {},
-    ).get();
+      ''', readsFrom: const {}).get();
 
     return rows.map((row) => Filament.fromMap(row.data)).toList();
   }
 
   Future<Filament?> findById(int id) async {
-    final row = await _database.customSelect(
-      '''
+    final row = await _database
+        .customSelect(
+          '''
       SELECT id, name, material_type, brand, color, initial_weight,
              current_weight, purchase_price, minimum_stock, supplier, notes
       FROM filaments WHERE id = ? LIMIT 1
       ''',
-      variables: [Variable<int>(id)],
-      readsFrom: const {},
-    ).getSingleOrNull();
+          variables: [Variable<int>(id)],
+          readsFrom: const {},
+        )
+        .getSingleOrNull();
 
     return row == null ? null : Filament.fromMap(row.data);
   }
 
   Future<int> count() async {
-    final row = await _database.customSelect(
-      'SELECT COUNT(*) AS total FROM filaments',
-      readsFrom: const {},
-    ).getSingle();
+    final row = await _database
+        .customSelect(
+          'SELECT COUNT(*) AS total FROM filaments',
+          readsFrom: const {},
+        )
+        .getSingle();
     return row.read<int>('total');
   }
 
   Future<int> lowStockCount() async {
-    final row = await _database.customSelect(
-      '''
+    final row = await _database.customSelect('''
       SELECT COUNT(*) AS total
       FROM filaments
       WHERE current_weight <= minimum_stock
-      ''',
-      readsFrom: const {},
-    ).getSingle();
+      ''', readsFrom: const {}).getSingle();
     return row.read<int>('total');
   }
 

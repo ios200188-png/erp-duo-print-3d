@@ -80,25 +80,13 @@ abstract final class AppTheme {
           color: textPrimary,
           fontWeight: FontWeight.w800,
         ),
-        titleLarge: TextStyle(
-          color: textPrimary,
-          fontWeight: FontWeight.w800,
-        ),
-        titleMedium: TextStyle(
-          color: textPrimary,
-          fontWeight: FontWeight.w700,
-        ),
-        titleSmall: TextStyle(
-          color: textPrimary,
-          fontWeight: FontWeight.w700,
-        ),
+        titleLarge: TextStyle(color: textPrimary, fontWeight: FontWeight.w800),
+        titleMedium: TextStyle(color: textPrimary, fontWeight: FontWeight.w700),
+        titleSmall: TextStyle(color: textPrimary, fontWeight: FontWeight.w700),
         bodyLarge: TextStyle(color: textPrimary),
         bodyMedium: TextStyle(color: textSecondary),
         bodySmall: TextStyle(color: textSecondary),
-        labelLarge: TextStyle(
-          color: textPrimary,
-          fontWeight: FontWeight.w700,
-        ),
+        labelLarge: TextStyle(color: textPrimary, fontWeight: FontWeight.w700),
         labelMedium: TextStyle(
           color: textSecondary,
           fontWeight: FontWeight.w600,
@@ -351,9 +339,7 @@ abstract final class AppTheme {
         headerBackgroundColor: blueDark,
         headerForegroundColor: Colors.white,
         dayForegroundColor: const WidgetStatePropertyAll(textPrimary),
-        todayForegroundColor: const WidgetStatePropertyAll(
-          Color(0xFF8AB4FF),
-        ),
+        todayForegroundColor: const WidgetStatePropertyAll(Color(0xFF8AB4FF)),
         todayBorder: const BorderSide(color: bluePrimary),
         dayOverlayColor: const WidgetStatePropertyAll(Color(0x221260DC)),
         shape: RoundedRectangleBorder(borderRadius: rounded16),
@@ -366,25 +352,25 @@ abstract final class AppTheme {
       ),
 
       dividerTheme: const DividerThemeData(
-  color: border,
-  thickness: 1,
-  space: 1,
-),
+        color: border,
+        thickness: 1,
+        space: 1,
+      ),
 
-tooltipTheme: TooltipThemeData(
-  decoration: BoxDecoration(
-    color: surfaceHigh,
-    borderRadius: BorderRadius.circular(8),
-    border: Border.all(color: border),
-  ),
-  textStyle: const TextStyle(color: textPrimary),
-),
+      tooltipTheme: TooltipThemeData(
+        decoration: BoxDecoration(
+          color: surfaceHigh,
+          borderRadius: BorderRadius.circular(8),
+          border: Border.all(color: border),
+        ),
+        textStyle: const TextStyle(color: textPrimary),
+      ),
 
-textSelectionTheme: const TextSelectionThemeData(
-  cursorColor: bluePrimary,
-  selectionColor: Color(0x551260DC),
-  selectionHandleColor: bluePrimary,
-),
-);
+      textSelectionTheme: const TextSelectionThemeData(
+        cursorColor: bluePrimary,
+        selectionColor: Color(0x551260DC),
+        selectionHandleColor: bluePrimary,
+      ),
+    );
   }
 }

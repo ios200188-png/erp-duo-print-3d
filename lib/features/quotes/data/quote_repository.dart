@@ -18,9 +18,7 @@ final quoteCountProvider = FutureProvider<int>((ref) {
   return ref.watch(quoteRepositoryProvider).count();
 });
 
-
-final quoteDetailProvider =
-    FutureProvider.family<QuoteDetail?, int>((ref, id) {
+final quoteDetailProvider = FutureProvider.family<QuoteDetail?, int>((ref, id) {
   return ref.watch(quoteRepositoryProvider).findDetail(id);
 });
 
@@ -30,8 +28,7 @@ class QuoteRepository {
   final AppDatabase _database;
 
   Future<List<QuoteSummary>> findAll() async {
-    final rows = await _database.customSelect(
-      '''
+    final rows = await _database.customSelect('''
       SELECT q.id, c.name AS customer_name, p.name AS project_name,
              q.project_id, q.quantity, q.total_cost, q.sale_price,
              q.status, q.created_at
@@ -39,17 +36,15 @@ class QuoteRepository {
       INNER JOIN customers c ON c.id = q.customer_id
       INNER JOIN projects p ON p.id = q.project_id
       ORDER BY q.created_at DESC
-      ''',
-      readsFrom: const {},
-    ).get();
+      ''', readsFrom: const {}).get();
 
     return rows.map((row) => QuoteSummary.fromMap(row.data)).toList();
   }
 
-
   Future<QuoteDetail?> findDetail(int id) async {
-    final row = await _database.customSelect(
-      '''
+    final row = await _database
+        .customSelect(
+          '''
       SELECT q.id,
              c.name AS customer_name,
              c.document AS customer_document,
@@ -73,18 +68,21 @@ class QuoteRepository {
       WHERE q.id = ?
       LIMIT 1
       ''',
-      variables: [Variable<int>(id)],
-      readsFrom: const {},
-    ).getSingleOrNull();
+          variables: [Variable<int>(id)],
+          readsFrom: const {},
+        )
+        .getSingleOrNull();
 
     return row == null ? null : QuoteDetail.fromMap(row.data);
   }
 
   Future<int> count() async {
-    final row = await _database.customSelect(
-      'SELECT COUNT(*) AS total FROM quotes',
-      readsFrom: const {},
-    ).getSingle();
+    final row = await _database
+        .customSelect(
+          'SELECT COUNT(*) AS total FROM quotes',
+          readsFrom: const {},
+        )
+        .getSingle();
 
     return row.read<int>('total');
   }
@@ -134,19 +132,20 @@ class QuoteRepository {
     );
   }
 
-
   Future<void> approve(int quoteId) async {
     await _database.transaction(() async {
-      final quote = await _database.customSelect(
-        '''
+      final quote = await _database
+          .customSelect(
+            '''
         SELECT id, project_id, quantity, status
         FROM quotes
         WHERE id = ?
         LIMIT 1
         ''',
-        variables: [Variable<int>(quoteId)],
-        readsFrom: const {},
-      ).getSingle();
+            variables: [Variable<int>(quoteId)],
+            readsFrom: const {},
+          )
+          .getSingle();
 
       if (quote.read<String>('status') != 'Rascunho') return;
 
@@ -180,22 +179,16 @@ class QuoteRepository {
   }
 
   Future<int> producedAwaitingInvoiceCount() async {
-    final row = await _database.customSelect(
-      '''
+    final row = await _database.customSelect('''
       SELECT COUNT(*) AS total
       FROM quotes q
       LEFT JOIN invoices i ON i.quote_id = q.id
       WHERE q.status = 'Produzido' AND i.id IS NULL
-      ''',
-      readsFrom: const {},
-    ).getSingle();
+      ''', readsFrom: const {}).getSingle();
     return row.read<int>('total');
   }
 
   Future<void> delete(int id) async {
-    await _database.customStatement(
-      'DELETE FROM quotes WHERE id = ?',
-      [id],
-    );
+    await _database.customStatement('DELETE FROM quotes WHERE id = ?', [id]);
   }
 }

@@ -1,10 +1,4 @@
-enum AgendaItemType {
-  delivery,
-  receivable,
-  payable,
-  maintenance,
-  stock,
-}
+enum AgendaItemType { delivery, receivable, payable, maintenance, stock }
 
 class AgendaItem {
   const AgendaItem({

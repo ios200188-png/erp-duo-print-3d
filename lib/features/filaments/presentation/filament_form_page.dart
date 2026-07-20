@@ -49,7 +49,9 @@ class _FilamentFormPageState extends ConsumerState<FilamentFormPage> {
   Future<void> _save() async {
     if (!_formKey.currentState!.validate()) return;
 
-    await ref.read(filamentRepositoryProvider).save(
+    await ref
+        .read(filamentRepositoryProvider)
+        .save(
           id: widget.filamentId,
           name: _name.text.trim(),
           materialType: _type.text.trim(),
@@ -136,8 +138,9 @@ class _FilamentFormPageState extends ConsumerState<FilamentFormPage> {
             : TextInputType.text,
         decoration: InputDecoration(labelText: label),
         validator: label.contains('*')
-            ? (value) =>
-                value == null || value.trim().isEmpty ? 'Campo obrigatório.' : null
+            ? (value) => value == null || value.trim().isEmpty
+                  ? 'Campo obrigatório.'
+                  : null
             : null,
       ),
     );

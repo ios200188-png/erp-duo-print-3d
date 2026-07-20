@@ -19,8 +19,9 @@ class QuotePdfService {
     final date = DateFormat('dd/MM/yyyy');
     final validity = quote.createdAt.add(const Duration(days: 15));
 
-    final logoData =
-        await rootBundle.load('assets/branding/logo_duo_print_3d.png');
+    final logoData = await rootBundle.load(
+      'assets/branding/logo_duo_print_3d.png',
+    );
     final logo = pw.MemoryImage(logoData.buffer.asUint8List());
 
     document.addPage(
@@ -73,12 +74,7 @@ class QuotePdfService {
           pw.SizedBox(height: 18),
           _sectionTitle('PRODUTO / SERVIÇO'),
           pw.TableHelper.fromTextArray(
-            headers: const [
-              'Descrição',
-              'Material',
-              'Qtd.',
-              'Valor total',
-            ],
+            headers: const ['Descrição', 'Material', 'Qtd.', 'Valor total'],
             data: [
               [
                 quote.projectVersion.isEmpty
@@ -115,9 +111,7 @@ class QuotePdfService {
               children: [
                 pw.Text(
                   'TOTAL DO ORÇAMENTO',
-                  style: const pw.TextStyle(
-                    fontWeight: pw.FontWeight.bold,
-                  ),
+                  style: const pw.TextStyle(fontWeight: pw.FontWeight.bold),
                 ),
                 pw.Spacer(),
                 pw.Text(
@@ -135,17 +129,12 @@ class QuotePdfService {
           pw.Text(
             'Prazo e condições podem ser confirmados no momento da aprovação.',
           ),
-          pw.Text(
-            'Este orçamento é válido até ${date.format(validity)}.',
-          ),
+          pw.Text('Este orçamento é válido até ${date.format(validity)}.'),
           pw.SizedBox(height: 30),
           pw.Divider(),
           pw.Text(
             'Duo Print 3D — Imprimindo ideias. Criando soluções.',
-            style: const pw.TextStyle(
-              fontSize: 9,
-              color: PdfColors.grey700,
-            ),
+            style: const pw.TextStyle(fontSize: 9, color: PdfColors.grey700),
           ),
         ],
       ),
@@ -180,9 +169,7 @@ class QuotePdfService {
     return pw.Container(
       width: double.infinity,
       padding: const pw.EdgeInsets.symmetric(vertical: 6, horizontal: 8),
-      decoration: pw.BoxDecoration(
-        color: PdfColor.fromHex('#111111'),
-      ),
+      decoration: pw.BoxDecoration(color: PdfColor.fromHex('#111111')),
       child: pw.Text(
         text,
         style: const pw.TextStyle(

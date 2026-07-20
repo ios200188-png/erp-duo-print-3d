@@ -12,9 +12,7 @@ Future<void> main() async {
 
   runApp(
     ProviderScope(
-      overrides: [
-        appDatabaseProvider.overrideWithValue(database),
-      ],
+      overrides: [appDatabaseProvider.overrideWithValue(database)],
       child: const DuoPrintApp(),
     ),
   );

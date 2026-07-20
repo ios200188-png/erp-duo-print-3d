@@ -43,12 +43,10 @@ class Invoice {
       quantity: map['quantity']! as int,
       salePrice: (map['sale_price']! as num).toDouble(),
       paymentMethod: map['payment_method']! as String,
-      dueDate:
-          DateTime.fromMillisecondsSinceEpoch(map['due_date']! as int),
+      dueDate: DateTime.fromMillisecondsSinceEpoch(map['due_date']! as int),
       status: map['status']! as String,
       notes: map['notes']! as String,
-      issuedAt:
-          DateTime.fromMillisecondsSinceEpoch(map['issued_at']! as int),
+      issuedAt: DateTime.fromMillisecondsSinceEpoch(map['issued_at']! as int),
     );
   }
 }

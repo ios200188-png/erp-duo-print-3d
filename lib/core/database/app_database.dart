@@ -7,12 +7,7 @@ final appDatabaseProvider = Provider<AppDatabase>((ref) {
 });
 
 class AppDatabase extends GeneratedDatabase {
-  AppDatabase()
-      : super(
-          driftDatabase(
-            name: 'erp_duo_print_3d',
-          ),
-        );
+  AppDatabase() : super(driftDatabase(name: 'erp_duo_print_3d'));
 
   @override
   int get schemaVersion => 1;
@@ -221,12 +216,19 @@ class AppDatabase extends GeneratedDatabase {
       )
     ''');
 
-
     await _ensureColumn(
-      'quotes',
-      'delivery_date',
-      'INTEGER',
+      'financial_entries',
+      'paid_amount',
+      'REAL NOT NULL DEFAULT 0',
     );
+
+    await customStatement('''
+      UPDATE financial_entries
+      SET paid_amount = amount
+      WHERE status = 'Pago' AND paid_amount = 0
+    ''');
+
+    await _ensureColumn('quotes', 'delivery_date', 'INTEGER');
 
     await customStatement('''
       CREATE TABLE IF NOT EXISTS invoices (

@@ -41,7 +41,8 @@ class DashboardSummary {
     if (previousMonthProfit == 0) {
       return monthProfit == 0 ? 0 : 100;
     }
-    return ((monthProfit - previousMonthProfit) / previousMonthProfit.abs()) * 100;
+    return ((monthProfit - previousMonthProfit) / previousMonthProfit.abs()) *
+        100;
   }
 }
 

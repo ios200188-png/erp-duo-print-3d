@@ -7,10 +7,7 @@ import '../../finance/data/finance_repository.dart';
 import '../data/billing_repository.dart';
 
 class BillingFormPage extends ConsumerStatefulWidget {
-  const BillingFormPage({
-    required this.quoteId,
-    super.key,
-  });
+  const BillingFormPage({required this.quoteId, super.key});
 
   final int quoteId;
 
@@ -43,7 +40,9 @@ class _BillingFormPageState extends ConsumerState<BillingFormPage> {
   }
 
   Future<void> _issue() async {
-    await ref.read(billingRepositoryProvider).issue(
+    await ref
+        .read(billingRepositoryProvider)
+        .issue(
           quoteId: widget.quoteId,
           paymentMethod: _paymentMethod,
           dueDate: _dueDate,
@@ -71,15 +70,10 @@ class _BillingFormPageState extends ConsumerState<BillingFormPage> {
         children: [
           DropdownButtonFormField<String>(
             initialValue: _paymentMethod,
-            decoration: const InputDecoration(
-              labelText: 'Forma de pagamento',
-            ),
+            decoration: const InputDecoration(labelText: 'Forma de pagamento'),
             items: const [
               DropdownMenuItem(value: 'PIX', child: Text('PIX')),
-              DropdownMenuItem(
-                value: 'Dinheiro',
-                child: Text('Dinheiro'),
-              ),
+              DropdownMenuItem(value: 'Dinheiro', child: Text('Dinheiro')),
               DropdownMenuItem(
                 value: 'Cartão de débito',
                 child: Text('Cartão de débito'),
@@ -92,10 +86,7 @@ class _BillingFormPageState extends ConsumerState<BillingFormPage> {
                 value: 'Transferência',
                 child: Text('Transferência'),
               ),
-              DropdownMenuItem(
-                value: 'Boleto',
-                child: Text('Boleto'),
-              ),
+              DropdownMenuItem(value: 'Boleto', child: Text('Boleto')),
             ],
             onChanged: (value) {
               setState(() => _paymentMethod = value ?? 'PIX');

@@ -31,9 +31,7 @@ class QuoteSummary {
       totalCost: (map['total_cost']! as num).toDouble(),
       salePrice: (map['sale_price']! as num).toDouble(),
       status: map['status']! as String,
-      createdAt: DateTime.fromMillisecondsSinceEpoch(
-        map['created_at']! as int,
-      ),
+      createdAt: DateTime.fromMillisecondsSinceEpoch(map['created_at']! as int),
     );
   }
 }

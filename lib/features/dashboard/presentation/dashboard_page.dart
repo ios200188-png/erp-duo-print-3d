@@ -110,13 +110,19 @@ class DashboardPage extends ConsumerWidget {
             SliverPadding(
               padding: const EdgeInsets.fromLTRB(20, 0, 20, 12),
               sliver: SliverToBoxAdapter(
-                child: _MonthlyFinanceChart(points: value.monthlyHistory, money: money),
+                child: _MonthlyFinanceChart(
+                  points: value.monthlyHistory,
+                  money: money,
+                ),
               ),
             ),
             SliverPadding(
               padding: const EdgeInsets.fromLTRB(20, 0, 20, 12),
               sliver: SliverToBoxAdapter(
-                child: _CashEvolutionChart(points: value.cashEvolution, money: money),
+                child: _CashEvolutionChart(
+                  points: value.cashEvolution,
+                  money: money,
+                ),
               ),
             ),
             SliverPadding(
@@ -205,16 +211,16 @@ class _Header extends StatelessWidget {
               Text(
                 'ERP DUO PRINT 3D',
                 style: Theme.of(context).textTheme.labelLarge?.copyWith(
-                      color: Theme.of(context).colorScheme.primary,
-                      fontWeight: FontWeight.w800,
-                    ),
+                  color: Theme.of(context).colorScheme.primary,
+                  fontWeight: FontWeight.w800,
+                ),
               ),
               const SizedBox(height: 5),
               Text(
                 'Visão executiva',
                 style: Theme.of(context).textTheme.headlineSmall?.copyWith(
-                      fontWeight: FontWeight.w800,
-                    ),
+                  fontWeight: FontWeight.w800,
+                ),
               ),
               Text(
                 value.overdueFinancial > 0
@@ -254,7 +260,11 @@ class _HeroCard extends StatelessWidget {
                     value: money.format(value.monthRevenue),
                   ),
                 ),
-                Container(width: 1, height: 54, color: Theme.of(context).dividerColor),
+                Container(
+                  width: 1,
+                  height: 54,
+                  color: Theme.of(context).dividerColor,
+                ),
                 const SizedBox(width: 18),
                 Expanded(
                   child: _HeroValue(
@@ -278,9 +288,9 @@ class _HeroCard extends StatelessWidget {
                 const SizedBox(width: 6),
                 Text(
                   '${positive ? '+' : ''}${variation.toStringAsFixed(1)}% em relação ao mês anterior',
-                  style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                        fontWeight: FontWeight.w700,
-                      ),
+                  style: Theme.of(
+                    context,
+                  ).textTheme.bodySmall?.copyWith(fontWeight: FontWeight.w700),
                 ),
               ],
             ),
@@ -292,7 +302,11 @@ class _HeroCard extends StatelessWidget {
 }
 
 class _HeroValue extends StatelessWidget {
-  const _HeroValue({required this.label, required this.value, this.highlight = false});
+  const _HeroValue({
+    required this.label,
+    required this.value,
+    this.highlight = false,
+  });
 
   final String label;
   final String value;
@@ -310,9 +324,9 @@ class _HeroValue extends StatelessWidget {
           maxLines: 1,
           overflow: TextOverflow.ellipsis,
           style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                fontWeight: FontWeight.w900,
-                color: highlight ? Theme.of(context).colorScheme.primary : null,
-              ),
+            fontWeight: FontWeight.w900,
+            color: highlight ? Theme.of(context).colorScheme.primary : null,
+          ),
         ),
       ],
     );
@@ -335,9 +349,9 @@ class _SectionTitle extends StatelessWidget {
             Expanded(
               child: Text(
                 title,
-                style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                      fontWeight: FontWeight.w800,
-                    ),
+                style: Theme.of(
+                  context,
+                ).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.w800),
               ),
             ),
             if (subtitle != null)
@@ -372,11 +386,16 @@ class _MonthlyFinanceChart extends StatelessWidget {
             return Row(
               crossAxisAlignment: CrossAxisAlignment.end,
               children: points.map((point) {
-                final revenueHeight = maxValue == 0 ? 0.0 : (point.revenue / maxValue) * 145;
-                final expenseHeight = maxValue == 0 ? 0.0 : (point.expenses / maxValue) * 145;
+                final revenueHeight = maxValue == 0
+                    ? 0.0
+                    : (point.revenue / maxValue) * 145;
+                final expenseHeight = maxValue == 0
+                    ? 0.0
+                    : (point.expenses / maxValue) * 145;
                 return Expanded(
                   child: Tooltip(
-                    message: '${DateFormat.MMM('pt_BR').format(point.month)}\n'
+                    message:
+                        '${DateFormat.MMM('pt_BR').format(point.month)}\n'
                         'Receita: ${money.format(point.revenue)}\n'
                         'Despesa: ${money.format(point.expenses)}',
                     child: Column(
@@ -395,7 +414,9 @@ class _MonthlyFinanceChart extends StatelessWidget {
                         ),
                         const SizedBox(height: 8),
                         Text(
-                          DateFormat.MMM('pt_BR').format(point.month).replaceAll('.', ''),
+                          DateFormat.MMM(
+                            'pt_BR',
+                          ).format(point.month).replaceAll('.', ''),
                           style: Theme.of(context).textTheme.labelSmall,
                         ),
                       ],
@@ -442,7 +463,10 @@ class _Legend extends StatelessWidget {
     return Row(
       mainAxisAlignment: MainAxisAlignment.center,
       children: [
-        _LegendItem(label: 'Receita', color: Theme.of(context).colorScheme.primary),
+        _LegendItem(
+          label: 'Receita',
+          color: Theme.of(context).colorScheme.primary,
+        ),
         const SizedBox(width: 18),
         _LegendItem(
           label: 'Despesa',
@@ -467,7 +491,10 @@ class _LegendItem extends StatelessWidget {
         Container(
           width: 10,
           height: 10,
-          decoration: BoxDecoration(color: color, borderRadius: BorderRadius.circular(3)),
+          decoration: BoxDecoration(
+            color: color,
+            borderRadius: BorderRadius.circular(3),
+          ),
         ),
         const SizedBox(width: 6),
         Text(label, style: Theme.of(context).textTheme.bodySmall),
@@ -491,9 +518,9 @@ class _CashEvolutionChart extends StatelessWidget {
       trailing: Text(
         money.format(current),
         style: Theme.of(context).textTheme.titleMedium?.copyWith(
-              fontWeight: FontWeight.w900,
-              color: Theme.of(context).colorScheme.primary,
-            ),
+          fontWeight: FontWeight.w900,
+          color: Theme.of(context).colorScheme.primary,
+        ),
       ),
       child: SizedBox(
         height: 180,
@@ -501,10 +528,14 @@ class _CashEvolutionChart extends StatelessWidget {
             ? const _EmptyChart(message: 'Sem movimentações no período')
             : CustomPaint(
                 painter: _LineChartPainter(
-                  values: points.map((point) => point.balance).toList(growable: false),
+                  values: points
+                      .map((point) => point.balance)
+                      .toList(growable: false),
                   lineColor: Theme.of(context).colorScheme.primary,
                   gridColor: Theme.of(context).dividerColor,
-                  fillColor: Theme.of(context).colorScheme.primary.withValues(alpha: 0.10),
+                  fillColor: Theme.of(
+                    context,
+                  ).colorScheme.primary.withValues(alpha: 0.10),
                 ),
                 child: const SizedBox.expand(),
               ),
@@ -528,7 +559,9 @@ class _LineChartPainter extends CustomPainter {
 
   @override
   void paint(Canvas canvas, Size size) {
-    final gridPaint = Paint()..color = gridColor..strokeWidth = 1;
+    final gridPaint = Paint()
+      ..color = gridColor
+      ..strokeWidth = 1;
     for (var i = 1; i < 4; i++) {
       final y = size.height * i / 4;
       canvas.drawLine(Offset(0, y), Offset(size.width, y), gridPaint);
@@ -596,7 +629,9 @@ class _ExpenseCategoryChart extends StatelessWidget {
       subtitle: 'Mês atual',
       trailing: Text(
         money.format(total),
-        style: Theme.of(context).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w900),
+        style: Theme.of(
+          context,
+        ).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w900),
       ),
       child: points.isEmpty
           ? const SizedBox(
@@ -621,14 +656,16 @@ class _ExpenseCategoryChart extends StatelessWidget {
                           ),
                           Text(
                             '${(fraction * 100).toStringAsFixed(0)}%  •  ${money.format(point.amount)}',
-                            style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                                  fontWeight: FontWeight.w700,
-                                ),
+                            style: Theme.of(context).textTheme.bodySmall
+                                ?.copyWith(fontWeight: FontWeight.w700),
                           ),
                         ],
                       ),
                       const SizedBox(height: 6),
-                      LinearProgressIndicator(value: fraction.clamp(0, 1), minHeight: 8),
+                      LinearProgressIndicator(
+                        value: fraction.clamp(0, 1),
+                        minHeight: 8,
+                      ),
                     ],
                   ),
                 );
@@ -669,11 +706,13 @@ class _ChartCard extends StatelessWidget {
                     children: [
                       Text(
                         title,
-                        style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                              fontWeight: FontWeight.w800,
-                            ),
+                        style: Theme.of(context).textTheme.titleMedium
+                            ?.copyWith(fontWeight: FontWeight.w800),
                       ),
-                      Text(subtitle, style: Theme.of(context).textTheme.bodySmall),
+                      Text(
+                        subtitle,
+                        style: Theme.of(context).textTheme.bodySmall,
+                      ),
                     ],
                   ),
                 ),
@@ -683,10 +722,7 @@ class _ChartCard extends StatelessWidget {
             ),
             const SizedBox(height: 18),
             child,
-            if (footer != null) ...[
-              const SizedBox(height: 14),
-              footer!,
-            ],
+            if (footer != null) ...[const SizedBox(height: 14), footer!],
           ],
         ),
       ),
@@ -705,7 +741,10 @@ class _EmptyChart extends StatelessWidget {
       child: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
-          Icon(Icons.insert_chart_outlined, color: Theme.of(context).colorScheme.outline),
+          Icon(
+            Icons.insert_chart_outlined,
+            color: Theme.of(context).colorScheme.outline,
+          ),
           const SizedBox(height: 8),
           Text(message, style: Theme.of(context).textTheme.bodySmall),
         ],
@@ -786,7 +825,10 @@ class _AlertCard extends StatelessWidget {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(title),
-                    Text(value, style: const TextStyle(fontWeight: FontWeight.w800)),
+                    Text(
+                      value,
+                      style: const TextStyle(fontWeight: FontWeight.w800),
+                    ),
                   ],
                 ),
               ),

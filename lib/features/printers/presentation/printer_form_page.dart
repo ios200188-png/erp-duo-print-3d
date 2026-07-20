@@ -51,7 +51,9 @@ class _PrinterFormPageState extends ConsumerState<PrinterFormPage> {
   Future<void> _save() async {
     if (!_formKey.currentState!.validate()) return;
 
-    await ref.read(printerRepositoryProvider).save(
+    await ref
+        .read(printerRepositoryProvider)
+        .save(
           id: widget.printerId,
           name: _name.text.trim(),
           manufacturer: _manufacturer.text.trim(),
@@ -146,8 +148,9 @@ class _PrinterFormPageState extends ConsumerState<PrinterFormPage> {
             : TextInputType.text,
         decoration: InputDecoration(labelText: label),
         validator: label.contains('*')
-            ? (value) =>
-                value == null || value.trim().isEmpty ? 'Campo obrigatório.' : null
+            ? (value) => value == null || value.trim().isEmpty
+                  ? 'Campo obrigatório.'
+                  : null
             : null,
       ),
     );

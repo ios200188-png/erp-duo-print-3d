@@ -1,5 +1,14 @@
 # Changelog
 
+## 0.7.4+22 — Sprint 3.3: Baixas integradas
+
+- Recebimentos e pagamentos parciais.
+- Saldo restante por lançamento.
+- Status Parcial e Vencido.
+- Baixa de faturamento atualiza automaticamente o caixa.
+- Estorno remove a movimentação do fluxo de caixa.
+- Resumo financeiro considera valores parcialmente pagos.
+
 ## 0.7.3+21 — Sprint 3.2: Fluxo de Caixa PRO
 
 - Pesquisa por descrição e categoria.

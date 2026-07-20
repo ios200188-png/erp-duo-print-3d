@@ -24,9 +24,7 @@ class QuotesPage extends ConsumerWidget {
         error: (error, _) => Center(child: Text('Erro: $error')),
         data: (items) {
           if (items.isEmpty) {
-            return const Center(
-              child: Text('Nenhum orçamento cadastrado.'),
-            );
+            return const Center(child: Text('Nenhum orçamento cadastrado.'));
           }
 
           return ListView.separated(
@@ -55,9 +53,7 @@ class QuotesPage extends ConsumerWidget {
                         isThreeLine: true,
                         trailing: Text(
                           money.format(item.salePrice),
-                          style: const TextStyle(
-                            fontWeight: FontWeight.w800,
-                          ),
+                          style: const TextStyle(fontWeight: FontWeight.w800),
                         ),
                       ),
                       Row(
@@ -140,9 +136,7 @@ class QuotesPage extends ConsumerWidget {
                                 const PopupMenuItem(
                                   value: 'billing',
                                   child: ListTile(
-                                    leading: Icon(
-                                      Icons.receipt_long_outlined,
-                                    ),
+                                    leading: Icon(Icons.receipt_long_outlined),
                                     title: Text('Faturar'),
                                   ),
                                 ),

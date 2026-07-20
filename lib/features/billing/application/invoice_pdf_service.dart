@@ -28,8 +28,9 @@ class InvoicePdfService {
     final document = pw.Document();
     final money = NumberFormat.currency(locale: 'pt_BR', symbol: r'R$');
     final date = DateFormat('dd/MM/yyyy');
-    final logoData =
-        await rootBundle.load('assets/branding/logo_duo_print_3d.png');
+    final logoData = await rootBundle.load(
+      'assets/branding/logo_duo_print_3d.png',
+    );
     final logo = pw.MemoryImage(logoData.buffer.asUint8List());
 
     document.addPage(
@@ -134,17 +135,11 @@ class InvoicePdfService {
           pw.Divider(),
           pw.Text(
             'Documento comercial de cobrança. Não substitui nota fiscal.',
-            style: const pw.TextStyle(
-              fontSize: 9,
-              color: PdfColors.grey700,
-            ),
+            style: const pw.TextStyle(fontSize: 9, color: PdfColors.grey700),
           ),
           pw.Text(
             'Duo Print 3D — Imprimindo ideias. Criando soluções.',
-            style: const pw.TextStyle(
-              fontSize: 9,
-              color: PdfColors.grey700,
-            ),
+            style: const pw.TextStyle(fontSize: 9, color: PdfColors.grey700),
           ),
         ],
       ),
@@ -157,9 +152,7 @@ class InvoicePdfService {
     return pw.Container(
       width: double.infinity,
       padding: const pw.EdgeInsets.symmetric(vertical: 6, horizontal: 8),
-      decoration: pw.BoxDecoration(
-        color: PdfColor.fromHex('#111111'),
-      ),
+      decoration: pw.BoxDecoration(color: PdfColor.fromHex('#111111')),
       child: pw.Text(
         text,
         style: const pw.TextStyle(

@@ -28,8 +28,7 @@ class Printer {
   final String notes;
 
   double get hoursUntilMaintenance {
-    final value =
-        maintenanceInterval - (printedHours - lastMaintenanceHours);
+    final value = maintenanceInterval - (printedHours - lastMaintenanceHours);
     return value < 0 ? 0 : value;
   }
 
@@ -44,8 +43,7 @@ class Printer {
       purchasePrice: (map['purchase_price']! as num).toDouble(),
       printedHours: (map['printed_hours']! as num).toDouble(),
       maintenanceInterval: (map['maintenance_interval']! as num).toDouble(),
-      lastMaintenanceHours:
-          (map['last_maintenance_hours']! as num).toDouble(),
+      lastMaintenanceHours: (map['last_maintenance_hours']! as num).toDouble(),
       active: (map['active']! as int) == 1,
       notes: map['notes']! as String,
     );

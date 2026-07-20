@@ -26,7 +26,8 @@ class QuoteCalculator {
     final laborCost = (laborMinutes / 60) * settings.laborHour;
     final packagingCost = settings.packagingCost;
 
-    final subtotal = materialCost +
+    final subtotal =
+        materialCost +
         energyCost +
         machineCost +
         laborCost +

@@ -23,8 +23,9 @@ class DashboardRepository {
     final nextMonth = DateTime(now.year, now.month + 1);
     final previousMonthStart = DateTime(now.year, now.month - 1);
 
-    final financial = await _database.customSelect(
-      '''
+    final financial = await _database
+        .customSelect(
+          '''
       SELECT
         COALESCE(SUM(CASE
           WHEN type = 'Receita' AND status = 'Pago'
@@ -58,22 +59,26 @@ class DashboardRepository {
           THEN 1 ELSE 0 END), 0) AS overdue
       FROM financial_entries
       ''',
-      variables: [
-        Variable<int>(monthStart.millisecondsSinceEpoch),
-        Variable<int>(nextMonth.millisecondsSinceEpoch),
-        Variable<int>(monthStart.millisecondsSinceEpoch),
-        Variable<int>(nextMonth.millisecondsSinceEpoch),
-        Variable<int>(previousMonthStart.millisecondsSinceEpoch),
-        Variable<int>(monthStart.millisecondsSinceEpoch),
-        Variable<int>(previousMonthStart.millisecondsSinceEpoch),
-        Variable<int>(monthStart.millisecondsSinceEpoch),
-        Variable<int>(DateTime(now.year, now.month, now.day).millisecondsSinceEpoch),
-      ],
-      readsFrom: const {},
-    ).getSingle();
+          variables: [
+            Variable<int>(monthStart.millisecondsSinceEpoch),
+            Variable<int>(nextMonth.millisecondsSinceEpoch),
+            Variable<int>(monthStart.millisecondsSinceEpoch),
+            Variable<int>(nextMonth.millisecondsSinceEpoch),
+            Variable<int>(previousMonthStart.millisecondsSinceEpoch),
+            Variable<int>(monthStart.millisecondsSinceEpoch),
+            Variable<int>(previousMonthStart.millisecondsSinceEpoch),
+            Variable<int>(monthStart.millisecondsSinceEpoch),
+            Variable<int>(
+              DateTime(now.year, now.month, now.day).millisecondsSinceEpoch,
+            ),
+          ],
+          readsFrom: const {},
+        )
+        .getSingle();
 
-    final operations = await _database.customSelect(
-      '''
+    final operations = await _database
+        .customSelect(
+          '''
       SELECT
         (SELECT COUNT(*) FROM production_orders
           WHERE status NOT IN ('Finalizada', 'Cancelada')) AS open_production,
@@ -89,18 +94,22 @@ class DashboardRepository {
         (SELECT COUNT(*) FROM production_orders
           WHERE status = 'Imprimindo') AS printers_working
       ''',
-      variables: [
-        Variable<int>(monthStart.millisecondsSinceEpoch),
-        Variable<int>(nextMonth.millisecondsSinceEpoch),
-        Variable<int>(monthStart.millisecondsSinceEpoch),
-        Variable<int>(nextMonth.millisecondsSinceEpoch),
-      ],
-      readsFrom: const {},
-    ).getSingle();
+          variables: [
+            Variable<int>(monthStart.millisecondsSinceEpoch),
+            Variable<int>(nextMonth.millisecondsSinceEpoch),
+            Variable<int>(monthStart.millisecondsSinceEpoch),
+            Variable<int>(nextMonth.millisecondsSinceEpoch),
+          ],
+          readsFrom: const {},
+        )
+        .getSingle();
 
     final monthlyHistory = await _loadMonthlyHistory(now);
     final cashEvolution = await _loadCashEvolution(now);
-    final expenseCategories = await _loadExpenseCategories(monthStart, nextMonth);
+    final expenseCategories = await _loadExpenseCategories(
+      monthStart,
+      nextMonth,
+    );
 
     final revenue = financial.read<double>('month_revenue');
     final expenses = financial.read<double>('month_expenses');
@@ -130,8 +139,9 @@ class DashboardRepository {
     final firstMonth = DateTime(now.year, now.month - 11);
     final nextMonth = DateTime(now.year, now.month + 1);
 
-    final rows = await _database.customSelect(
-      '''
+    final rows = await _database
+        .customSelect(
+          '''
       SELECT
         CAST(strftime('%Y', paid_date / 1000, 'unixepoch', 'localtime') AS INTEGER) AS year,
         CAST(strftime('%m', paid_date / 1000, 'unixepoch', 'localtime') AS INTEGER) AS month,
@@ -142,12 +152,13 @@ class DashboardRepository {
       GROUP BY year, month
       ORDER BY year, month
       ''',
-      variables: [
-        Variable<int>(firstMonth.millisecondsSinceEpoch),
-        Variable<int>(nextMonth.millisecondsSinceEpoch),
-      ],
-      readsFrom: const {},
-    ).get();
+          variables: [
+            Variable<int>(firstMonth.millisecondsSinceEpoch),
+            Variable<int>(nextMonth.millisecondsSinceEpoch),
+          ],
+          readsFrom: const {},
+        )
+        .get();
 
     final values = <String, MonthlyFinancePoint>{};
     for (final row in rows) {
@@ -168,11 +179,16 @@ class DashboardRepository {
   }
 
   Future<List<CashPoint>> _loadCashEvolution(DateTime now) async {
-    final start = DateTime(now.year, now.month, now.day).subtract(const Duration(days: 29));
+    final start = DateTime(
+      now.year,
+      now.month,
+      now.day,
+    ).subtract(const Duration(days: 29));
     final end = DateTime(now.year, now.month, now.day + 1);
 
-    final before = await _database.customSelect(
-      '''
+    final before = await _database
+        .customSelect(
+          '''
       SELECT COALESCE(SUM(CASE
         WHEN type = 'Receita' THEN amount
         WHEN type = 'Despesa' THEN -amount
@@ -180,12 +196,14 @@ class DashboardRepository {
       FROM financial_entries
       WHERE status = 'Pago' AND paid_date < ?
       ''',
-      variables: [Variable<int>(start.millisecondsSinceEpoch)],
-      readsFrom: const {},
-    ).getSingle();
+          variables: [Variable<int>(start.millisecondsSinceEpoch)],
+          readsFrom: const {},
+        )
+        .getSingle();
 
-    final rows = await _database.customSelect(
-      '''
+    final rows = await _database
+        .customSelect(
+          '''
       SELECT
         date(paid_date / 1000, 'unixepoch', 'localtime') AS day,
         COALESCE(SUM(CASE
@@ -197,21 +215,24 @@ class DashboardRepository {
       GROUP BY day
       ORDER BY day
       ''',
-      variables: [
-        Variable<int>(start.millisecondsSinceEpoch),
-        Variable<int>(end.millisecondsSinceEpoch),
-      ],
-      readsFrom: const {},
-    ).get();
+          variables: [
+            Variable<int>(start.millisecondsSinceEpoch),
+            Variable<int>(end.millisecondsSinceEpoch),
+          ],
+          readsFrom: const {},
+        )
+        .get();
 
     final movements = <String, double>{
-      for (final row in rows) row.read<String>('day'): row.read<double>('movement'),
+      for (final row in rows)
+        row.read<String>('day'): row.read<double>('movement'),
     };
 
     var balance = before.read<double>('balance');
     return List.generate(30, (index) {
       final date = DateTime(start.year, start.month, start.day + index);
-      final key = '${date.year.toString().padLeft(4, '0')}-'
+      final key =
+          '${date.year.toString().padLeft(4, '0')}-'
           '${date.month.toString().padLeft(2, '0')}-'
           '${date.day.toString().padLeft(2, '0')}';
       balance += movements[key] ?? 0;
@@ -223,8 +244,9 @@ class DashboardRepository {
     DateTime monthStart,
     DateTime nextMonth,
   ) async {
-    final rows = await _database.customSelect(
-      '''
+    final rows = await _database
+        .customSelect(
+          '''
       SELECT
         CASE WHEN TRIM(category) = '' THEN 'Sem categoria' ELSE category END AS category_name,
         COALESCE(SUM(amount), 0) AS total
@@ -235,12 +257,13 @@ class DashboardRepository {
       ORDER BY total DESC
       LIMIT 6
       ''',
-      variables: [
-        Variable<int>(monthStart.millisecondsSinceEpoch),
-        Variable<int>(nextMonth.millisecondsSinceEpoch),
-      ],
-      readsFrom: const {},
-    ).get();
+          variables: [
+            Variable<int>(monthStart.millisecondsSinceEpoch),
+            Variable<int>(nextMonth.millisecondsSinceEpoch),
+          ],
+          readsFrom: const {},
+        )
+        .get();
 
     return rows
         .map(

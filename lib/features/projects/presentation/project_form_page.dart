@@ -59,7 +59,9 @@ class _ProjectFormPageState extends ConsumerState<ProjectFormPage> {
 
     final printMinutes = (_integer(_hours.text) * 60) + _integer(_minutes.text);
 
-    await ref.read(projectRepositoryProvider).save(
+    await ref
+        .read(projectRepositoryProvider)
+        .save(
           id: widget.projectId,
           name: _name.text.trim(),
           version: _version.text.trim(),
@@ -89,7 +91,9 @@ class _ProjectFormPageState extends ConsumerState<ProjectFormPage> {
 
     return Scaffold(
       appBar: AppBar(
-        title: Text(widget.projectId == null ? 'Novo projeto' : 'Editar projeto'),
+        title: Text(
+          widget.projectId == null ? 'Novo projeto' : 'Editar projeto',
+        ),
       ),
       body: value.when(
         loading: () => const Center(child: CircularProgressIndicator()),
@@ -157,8 +161,9 @@ class _ProjectFormPageState extends ConsumerState<ProjectFormPage> {
             : TextInputType.text,
         decoration: InputDecoration(labelText: label),
         validator: label.contains('*')
-            ? (value) =>
-                value == null || value.trim().isEmpty ? 'Campo obrigatório.' : null
+            ? (value) => value == null || value.trim().isEmpty
+                  ? 'Campo obrigatório.'
+                  : null
             : null,
       ),
     );

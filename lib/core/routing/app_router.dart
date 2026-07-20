@@ -139,7 +139,6 @@ final appRouterProvider = Provider<GoRouter>((ref) {
             ],
           ),
 
-
           GoRoute(
             path: '/agenda',
             builder: (context, state) => const AgendaPage(),

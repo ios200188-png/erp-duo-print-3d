@@ -4,9 +4,66 @@ import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
 
 import '../data/finance_repository.dart';
+import '../domain/financial_entry.dart';
 
 class FinancePage extends ConsumerWidget {
   const FinancePage({super.key});
+
+  Future<void> _registerPayment(
+    BuildContext context,
+    WidgetRef ref,
+    FinancialEntry entry,
+  ) async {
+    final controller = TextEditingController(
+      text: entry.remainingAmount.toStringAsFixed(2).replaceAll('.', ','),
+    );
+    final amount = await showDialog<double>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: Text(
+          entry.type == 'Receita'
+              ? 'Registrar recebimento'
+              : 'Registrar pagamento',
+        ),
+        content: TextField(
+          controller: controller,
+          autofocus: true,
+          keyboardType: const TextInputType.numberWithOptions(decimal: true),
+          decoration: InputDecoration(
+            labelText: 'Valor',
+            helperText:
+                'Restante: R\$ ${entry.remainingAmount.toStringAsFixed(2)}',
+          ),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text('Cancelar'),
+          ),
+          FilledButton(
+            onPressed: () {
+              final value = double.tryParse(
+                controller.text.replaceAll(',', '.'),
+              );
+              if (value != null &&
+                  value > 0 &&
+                  value <= entry.remainingAmount) {
+                Navigator.pop(context, value);
+              }
+            },
+            child: const Text('Confirmar'),
+          ),
+        ],
+      ),
+    );
+    controller.dispose();
+    if (amount == null) return;
+    await ref
+        .read(financeRepositoryProvider)
+        .registerPayment(entry: entry, amount: amount);
+    ref.invalidate(financialEntriesProvider);
+    ref.invalidate(financeSummaryProvider);
+  }
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -72,9 +129,9 @@ class FinancePage extends ConsumerWidget {
             const SizedBox(height: 20),
             Text(
               'Lançamentos',
-              style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                    fontWeight: FontWeight.w800,
-                  ),
+              style: Theme.of(
+                context,
+              ).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.w800),
             ),
             const SizedBox(height: 10),
             entries.when(
@@ -99,15 +156,13 @@ class FinancePage extends ConsumerWidget {
                         child: ListTile(
                           leading: CircleAvatar(
                             child: Icon(
-                              isIncome
-                                  ? Icons.south_west
-                                  : Icons.north_east,
+                              isIncome ? Icons.south_west : Icons.north_east,
                             ),
                           ),
                           title: Text(item.description),
                           subtitle: Text(
                             '${item.category} • Venc. ${date.format(item.dueDate)}\n'
-                            '${item.status}',
+                            '${item.displayStatus}${item.status == 'Parcial' ? ' • Restante ${money.format(item.remainingAmount)}' : ''}',
                           ),
                           isThreeLine: true,
                           trailing: SizedBox(
@@ -125,13 +180,16 @@ class FinancePage extends ConsumerWidget {
                                 ),
                                 PopupMenuButton<String>(
                                   onSelected: (action) async {
-                                    if (action == 'toggle') {
+                                    if (action == 'payment') {
+                                      await _registerPayment(
+                                        context,
+                                        ref,
+                                        item,
+                                      );
+                                    } else if (action == 'toggle') {
                                       await ref
                                           .read(financeRepositoryProvider)
-                                          .togglePaid(
-                                            item.id,
-                                            item.status != 'Pago',
-                                          );
+                                          .togglePaid(item.id, false);
                                     } else {
                                       await ref
                                           .read(financeRepositoryProvider)
@@ -141,14 +199,20 @@ class FinancePage extends ConsumerWidget {
                                     ref.invalidate(financeSummaryProvider);
                                   },
                                   itemBuilder: (context) => [
-                                    PopupMenuItem(
-                                      value: 'toggle',
-                                      child: Text(
-                                        item.status == 'Pago'
-                                            ? 'Marcar pendente'
-                                            : 'Marcar pago',
+                                    if (item.status != 'Pago')
+                                      PopupMenuItem(
+                                        value: 'payment',
+                                        child: Text(
+                                          item.type == 'Receita'
+                                              ? 'Registrar recebimento'
+                                              : 'Registrar pagamento',
+                                        ),
                                       ),
-                                    ),
+                                    if (item.paidAmount > 0)
+                                      const PopupMenuItem(
+                                        value: 'toggle',
+                                        child: Text('Estornar baixa'),
+                                      ),
                                     const PopupMenuItem(
                                       value: 'delete',
                                       child: Text('Excluir'),

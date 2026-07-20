@@ -14,9 +14,7 @@ class AgendaPage extends ConsumerWidget {
     final dateFormat = DateFormat('dd/MM/yyyy');
 
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('Agenda inteligente'),
-      ),
+      appBar: AppBar(title: const Text('Agenda inteligente')),
       body: RefreshIndicator(
         onRefresh: () async {
           ref.invalidate(agendaItemsProvider);
@@ -64,9 +62,8 @@ class AgendaPage extends ConsumerWidget {
                     children: [
                       Text(
                         entry.key,
-                        style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                              fontWeight: FontWeight.w800,
-                            ),
+                        style: Theme.of(context).textTheme.titleMedium
+                            ?.copyWith(fontWeight: FontWeight.w800),
                       ),
                       const SizedBox(height: 8),
                       ...entry.value.map(
@@ -80,9 +77,7 @@ class AgendaPage extends ConsumerWidget {
                               title: Text(item.title),
                               subtitle: Text(item.subtitle),
                               trailing: item.isUrgent
-                                  ? const Icon(
-                                      Icons.warning_amber_rounded,
-                                    )
+                                  ? const Icon(Icons.warning_amber_rounded)
                                   : null,
                             ),
                           ),

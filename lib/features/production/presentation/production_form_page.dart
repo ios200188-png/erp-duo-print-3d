@@ -11,8 +11,7 @@ class ProductionFormPage extends ConsumerStatefulWidget {
   const ProductionFormPage({super.key});
 
   @override
-  ConsumerState<ProductionFormPage> createState() =>
-      _ProductionFormPageState();
+  ConsumerState<ProductionFormPage> createState() => _ProductionFormPageState();
 }
 
 class _ProductionFormPageState extends ConsumerState<ProductionFormPage> {
@@ -49,13 +48,15 @@ class _ProductionFormPageState extends ConsumerState<ProductionFormPage> {
 
   Future<void> _save() async {
     if (_projectId == null) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Selecione um projeto.')),
-      );
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(const SnackBar(content: Text('Selecione um projeto.')));
       return;
     }
 
-    await ref.read(productionRepositoryProvider).save(
+    await ref
+        .read(productionRepositoryProvider)
+        .save(
           projectId: _projectId!,
           printerId: _printerId,
           quantityPlanned: _integer(_planned.text),
@@ -130,15 +131,17 @@ class _ProductionFormPageState extends ConsumerState<ProductionFormPage> {
                 TextField(
                   controller: _planned,
                   keyboardType: TextInputType.number,
-                  decoration:
-                      const InputDecoration(labelText: 'Quantidade planejada'),
+                  decoration: const InputDecoration(
+                    labelText: 'Quantidade planejada',
+                  ),
                 ),
                 const SizedBox(height: 12),
                 TextField(
                   controller: _produced,
                   keyboardType: TextInputType.number,
-                  decoration:
-                      const InputDecoration(labelText: 'Quantidade produzida'),
+                  decoration: const InputDecoration(
+                    labelText: 'Quantidade produzida',
+                  ),
                 ),
                 const SizedBox(height: 12),
                 DropdownButtonFormField<String>(
@@ -153,10 +156,7 @@ class _ProductionFormPageState extends ConsumerState<ProductionFormPage> {
                       value: 'Imprimindo',
                       child: Text('Imprimindo'),
                     ),
-                    DropdownMenuItem(
-                      value: 'Pausada',
-                      child: Text('Pausada'),
-                    ),
+                    DropdownMenuItem(value: 'Pausada', child: Text('Pausada')),
                     DropdownMenuItem(
                       value: 'Finalizada',
                       child: Text('Finalizada'),

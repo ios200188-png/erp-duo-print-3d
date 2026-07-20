@@ -36,8 +36,9 @@ class ProductionOrder {
       quantityProduced: map['quantity_produced']! as int,
       status: map['status']! as String,
       priority: map['priority']! as String,
-      scheduledDate:
-          rawDate == null ? null : DateTime.fromMillisecondsSinceEpoch(rawDate),
+      scheduledDate: rawDate == null
+          ? null
+          : DateTime.fromMillisecondsSinceEpoch(rawDate),
       notes: map['notes']! as String,
     );
   }

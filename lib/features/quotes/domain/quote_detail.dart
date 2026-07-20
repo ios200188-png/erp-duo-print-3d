@@ -52,9 +52,7 @@ class QuoteDetail {
       marginPercent: (map['margin_percent']! as num).toDouble(),
       status: map['status']! as String,
       notes: map['notes']! as String,
-      createdAt: DateTime.fromMillisecondsSinceEpoch(
-        map['created_at']! as int,
-      ),
+      createdAt: DateTime.fromMillisecondsSinceEpoch(map['created_at']! as int),
     );
   }
 }

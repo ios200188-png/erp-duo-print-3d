@@ -48,7 +48,9 @@ class _CustomerFormPageState extends ConsumerState<CustomerFormPage> {
     if (!_formKey.currentState!.validate()) return;
     setState(() => _saving = true);
 
-    await ref.read(customerRepositoryProvider).save(
+    await ref
+        .read(customerRepositoryProvider)
+        .save(
           id: widget.customerId,
           name: _name.text.trim(),
           phone: _phone.text.trim(),
@@ -71,7 +73,9 @@ class _CustomerFormPageState extends ConsumerState<CustomerFormPage> {
 
     return Scaffold(
       appBar: AppBar(
-        title: Text(widget.customerId == null ? 'Novo cliente' : 'Editar cliente'),
+        title: Text(
+          widget.customerId == null ? 'Novo cliente' : 'Editar cliente',
+        ),
         leading: IconButton(
           onPressed: () => context.go('/customers'),
           icon: const Icon(Icons.arrow_back),
@@ -91,10 +95,9 @@ class _CustomerFormPageState extends ConsumerState<CustomerFormPage> {
                 TextFormField(
                   controller: _name,
                   decoration: const InputDecoration(labelText: 'Nome *'),
-                  validator: (value) =>
-                      value == null || value.trim().isEmpty
-                          ? 'Informe o nome.'
-                          : null,
+                  validator: (value) => value == null || value.trim().isEmpty
+                      ? 'Informe o nome.'
+                      : null,
                 ),
                 const SizedBox(height: 12),
                 TextFormField(

@@ -25,9 +25,9 @@ class BillingPage extends ConsumerWidget {
         children: [
           Text(
             'Prontos para faturar',
-            style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                  fontWeight: FontWeight.w800,
-                ),
+            style: Theme.of(
+              context,
+            ).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.w800),
           ),
           const SizedBox(height: 10),
           billable.when(
@@ -73,9 +73,9 @@ class BillingPage extends ConsumerWidget {
           const SizedBox(height: 22),
           Text(
             'Faturas emitidas',
-            style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                  fontWeight: FontWeight.w800,
-                ),
+            style: Theme.of(
+              context,
+            ).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.w800),
           ),
           const SizedBox(height: 10),
           invoices.when(

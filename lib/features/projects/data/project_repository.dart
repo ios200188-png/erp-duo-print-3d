@@ -16,8 +16,7 @@ final projectCountProvider = FutureProvider<int>((ref) {
   return ref.watch(projectRepositoryProvider).count();
 });
 
-final projectByIdProvider =
-    FutureProvider.family<Project?, int>((ref, id) {
+final projectByIdProvider = FutureProvider.family<Project?, int>((ref, id) {
   return ref.watch(projectRepositoryProvider).findById(id);
 });
 
@@ -27,38 +26,39 @@ class ProjectRepository {
   final AppDatabase _database;
 
   Future<List<Project>> findAll() async {
-    final rows = await _database.customSelect(
-      '''
+    final rows = await _database.customSelect('''
       SELECT id, name, version, default_material, estimated_weight,
              print_minutes, infill_percent, layer_height, nozzle_size,
              suggested_price, file_path, notes, active
       FROM projects
       ORDER BY name COLLATE NOCASE, version COLLATE NOCASE
-      ''',
-      readsFrom: const {},
-    ).get();
+      ''', readsFrom: const {}).get();
     return rows.map((row) => Project.fromMap(row.data)).toList();
   }
 
   Future<Project?> findById(int id) async {
-    final row = await _database.customSelect(
-      '''
+    final row = await _database
+        .customSelect(
+          '''
       SELECT id, name, version, default_material, estimated_weight,
              print_minutes, infill_percent, layer_height, nozzle_size,
              suggested_price, file_path, notes, active
       FROM projects WHERE id = ? LIMIT 1
       ''',
-      variables: [Variable<int>(id)],
-      readsFrom: const {},
-    ).getSingleOrNull();
+          variables: [Variable<int>(id)],
+          readsFrom: const {},
+        )
+        .getSingleOrNull();
     return row == null ? null : Project.fromMap(row.data);
   }
 
   Future<int> count() async {
-    final row = await _database.customSelect(
-      'SELECT COUNT(*) AS total FROM projects WHERE active = 1',
-      readsFrom: const {},
-    ).getSingle();
+    final row = await _database
+        .customSelect(
+          'SELECT COUNT(*) AS total FROM projects WHERE active = 1',
+          readsFrom: const {},
+        )
+        .getSingle();
     return row.read<int>('total');
   }
 

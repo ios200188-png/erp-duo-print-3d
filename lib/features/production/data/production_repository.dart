@@ -22,8 +22,7 @@ class ProductionRepository {
   final AppDatabase _database;
 
   Future<List<ProductionOrder>> findAll() async {
-    final rows = await _database.customSelect(
-      '''
+    final rows = await _database.customSelect('''
       SELECT po.id, p.name AS project_name, pr.name AS printer_name,
              po.quantity_planned, po.quantity_produced, po.status,
              po.priority, po.scheduled_date, po.notes
@@ -38,22 +37,17 @@ class ProductionRepository {
           ELSE 4
         END,
         po.created_at DESC
-      ''',
-      readsFrom: const {},
-    ).get();
+      ''', readsFrom: const {}).get();
 
     return rows.map((row) => ProductionOrder.fromMap(row.data)).toList();
   }
 
   Future<int> openCount() async {
-    final row = await _database.customSelect(
-      '''
+    final row = await _database.customSelect('''
       SELECT COUNT(*) AS total
       FROM production_orders
       WHERE status NOT IN ('Finalizada', 'Cancelada')
-      ''',
-      readsFrom: const {},
-    ).getSingle();
+      ''', readsFrom: const {}).getSingle();
     return row.read<int>('total');
   }
 
@@ -120,16 +114,18 @@ class ProductionRepository {
       );
 
       if (status == 'Finalizada') {
-        final linkedQuote = await _database.customSelect(
-          '''
+        final linkedQuote = await _database
+            .customSelect(
+              '''
           SELECT quote_id
           FROM production_orders
           WHERE id = ?
           LIMIT 1
           ''',
-          variables: [Variable<int>(id)],
-          readsFrom: const {},
-        ).getSingleOrNull();
+              variables: [Variable<int>(id)],
+              readsFrom: const {},
+            )
+            .getSingleOrNull();
 
         final quoteId = linkedQuote?.readNullable<int>('quote_id');
         if (quoteId != null) {

@@ -10,21 +10,14 @@ import '../domain/production_order.dart';
 class ProductionPage extends ConsumerWidget {
   const ProductionPage({super.key});
 
-  static const _columns = [
-    'Planejada',
-    'Imprimindo',
-    'Pausada',
-    'Finalizada',
-  ];
+  static const _columns = ['Planejada', 'Imprimindo', 'Pausada', 'Finalizada'];
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final orders = ref.watch(productionOrdersProvider);
 
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('Produção Kanban'),
-      ),
+      appBar: AppBar(title: const Text('Produção Kanban')),
       body: orders.when(
         loading: () => const Center(child: CircularProgressIndicator()),
         error: (error, _) => Center(child: Text('Erro: $error')),
@@ -58,8 +51,7 @@ class ProductionPage extends ConsumerWidget {
                       return ListView.separated(
                         padding: const EdgeInsets.fromLTRB(16, 16, 16, 100),
                         itemCount: filtered.length,
-                        separatorBuilder: (_, _) =>
-                            const SizedBox(height: 10),
+                        separatorBuilder: (_, _) => const SizedBox(height: 10),
                         itemBuilder: (context, index) {
                           return _KanbanCard(order: filtered[index]);
                         },
@@ -91,9 +83,7 @@ class _KanbanCard extends ConsumerWidget {
           children: [
             Row(
               children: [
-                CircleAvatar(
-                  child: Icon(_icon(order.status)),
-                ),
+                CircleAvatar(child: Icon(_icon(order.status))),
                 const SizedBox(width: 12),
                 Expanded(
                   child: Column(
@@ -108,8 +98,7 @@ class _KanbanCard extends ConsumerWidget {
                   ),
                 ),
                 PopupMenuButton<String>(
-                  onSelected: (status) =>
-                      _changeStatus(context, ref, status),
+                  onSelected: (status) => _changeStatus(context, ref, status),
                   itemBuilder: (context) => const [
                     PopupMenuItem(
                       value: 'Planejada',
@@ -144,11 +133,7 @@ class _KanbanCard extends ConsumerWidget {
             ),
             if (order.notes.isNotEmpty) ...[
               const SizedBox(height: 8),
-              Text(
-                order.notes,
-                maxLines: 2,
-                overflow: TextOverflow.ellipsis,
-              ),
+              Text(order.notes, maxLines: 2, overflow: TextOverflow.ellipsis),
             ],
           ],
         ),
@@ -161,11 +146,14 @@ class _KanbanCard extends ConsumerWidget {
     WidgetRef ref,
     String status,
   ) async {
-    await ref.read(productionRepositoryProvider).updateStatus(
+    await ref
+        .read(productionRepositoryProvider)
+        .updateStatus(
           order.id,
           status,
-          quantityProduced:
-              status == 'Finalizada' ? order.quantityPlanned : null,
+          quantityProduced: status == 'Finalizada'
+              ? order.quantityPlanned
+              : null,
         );
 
     ref.invalidate(productionOrdersProvider);
@@ -177,9 +165,9 @@ class _KanbanCard extends ConsumerWidget {
     ref.invalidate(agendaItemsProvider);
 
     if (!context.mounted) return;
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(content: Text('Ordem movida para $status.')),
-    );
+    ScaffoldMessenger.of(
+      context,
+    ).showSnackBar(SnackBar(content: Text('Ordem movida para $status.')));
   }
 
   static IconData _icon(String status) {

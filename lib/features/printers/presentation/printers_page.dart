@@ -41,9 +41,7 @@ class PrintersPage extends ConsumerWidget {
                   trailing: IconButton(
                     icon: const Icon(Icons.delete_outline),
                     onPressed: () async {
-                      await ref
-                          .read(printerRepositoryProvider)
-                          .delete(item.id);
+                      await ref.read(printerRepositoryProvider).delete(item.id);
                       ref.invalidate(printersProvider);
                       ref.invalidate(printerCountProvider);
                     },
