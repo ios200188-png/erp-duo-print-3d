@@ -72,44 +72,95 @@ class FinanceRepository {
   }) async {
     final now = DateTime.now().millisecondsSinceEpoch;
 
-    await _database.customStatement(
-      '''
-      INSERT INTO financial_entries (
-        type, category, description, amount, due_date, paid_date,
-        status, notes, created_at, updated_at
-      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-      ''',
-      [
-        type,
-        category,
-        description,
-        amount,
-        dueDate.millisecondsSinceEpoch,
-        paid ? now : null,
-        paid ? 'Pago' : 'Pendente',
-        notes,
-        now,
-        now,
-      ],
-    );
+    await _database.transaction(() async {
+      await _database.customStatement(
+        '''
+        INSERT INTO financial_entries (
+          type, category, description, amount, due_date, paid_date,
+          status, notes, created_at, updated_at
+        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+        ''',
+        [
+          type,
+          category,
+          description,
+          amount,
+          dueDate.millisecondsSinceEpoch,
+          paid ? now : null,
+          paid ? 'Pago' : 'Pendente',
+          notes,
+          now,
+          now,
+        ],
+      );
+
+      if (paid) {
+        await _database.customStatement(
+          '''
+          INSERT INTO cash_transactions (
+            date, description, amount, type, category,
+            finance_entry_id, created_at
+          )
+          SELECT paid_date, description, amount, type, category, id, ?
+          FROM financial_entries
+          WHERE id = last_insert_rowid()
+          ''',
+          [now],
+        );
+      }
+    });
   }
 
   Future<void> togglePaid(int id, bool paid) async {
     final now = DateTime.now().millisecondsSinceEpoch;
-    await _database.customStatement(
-      '''
-      UPDATE financial_entries
-      SET status = ?, paid_date = ?, updated_at = ?
-      WHERE id = ?
-      ''',
-      [paid ? 'Pago' : 'Pendente', paid ? now : null, now, id],
-    );
+    await _database.transaction(() async {
+      await _database.customStatement(
+        '''
+        UPDATE financial_entries
+        SET status = ?, paid_date = ?, updated_at = ?
+        WHERE id = ?
+        ''',
+        [paid ? 'Pago' : 'Pendente', paid ? now : null, now, id],
+      );
+
+      if (paid) {
+        await _database.customStatement(
+          '''
+          INSERT INTO cash_transactions (
+            date, description, amount, type, category,
+            finance_entry_id, created_at
+          )
+          SELECT paid_date, description, amount, type, category, id, ?
+          FROM financial_entries
+          WHERE id = ?
+          ON CONFLICT(finance_entry_id) DO UPDATE SET
+            date = excluded.date,
+            description = excluded.description,
+            amount = excluded.amount,
+            type = excluded.type,
+            category = excluded.category
+          ''',
+          [now, id],
+        );
+      } else {
+        await _database.customStatement(
+          'DELETE FROM cash_transactions WHERE finance_entry_id = ?',
+          [id],
+        );
+      }
+    });
   }
 
   Future<void> delete(int id) async {
-    await _database.customStatement(
-      'DELETE FROM financial_entries WHERE id = ?',
-      [id],
-    );
+    await _database.transaction(() async {
+      await _database.customStatement(
+        'DELETE FROM cash_transactions WHERE finance_entry_id = ?',
+        [id],
+      );
+      await _database.customStatement(
+        'DELETE FROM financial_entries WHERE id = ?',
+        [id],
+      );
+    });
   }
 }

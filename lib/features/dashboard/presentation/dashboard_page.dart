@@ -1,3 +1,5 @@
+import 'dart:math' as math;
+
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -5,6 +7,7 @@ import 'package:intl/intl.dart';
 
 import '../../agenda/data/agenda_repository.dart';
 import '../data/dashboard_repository.dart';
+import '../domain/dashboard_summary.dart';
 
 class DashboardPage extends ConsumerWidget {
   const DashboardPage({super.key});
@@ -33,54 +36,12 @@ class DashboardPage extends ConsumerWidget {
           slivers: [
             SliverPadding(
               padding: const EdgeInsets.fromLTRB(20, 20, 20, 8),
-              sliver: SliverToBoxAdapter(
-                child: Row(
-                  children: [
-                    Expanded(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            'ERP DUO PRINT 3D',
-                            style: Theme.of(context)
-                                .textTheme
-                                .labelLarge
-                                ?.copyWith(
-                                  color:
-                                      Theme.of(context).colorScheme.primary,
-                                  fontWeight: FontWeight.w800,
-                                ),
-                          ),
-                          const SizedBox(height: 5),
-                          Text(
-                            'Visão executiva',
-                            style: Theme.of(context)
-                                .textTheme
-                                .headlineSmall
-                                ?.copyWith(fontWeight: FontWeight.w800),
-                          ),
-                          const Text(
-                            'Produção, financeiro e operação em um só lugar.',
-                          ),
-                        ],
-                      ),
-                    ),
-                    const CircleAvatar(
-                      radius: 24,
-                      child: Icon(Icons.auto_graph_outlined),
-                    ),
-                  ],
-                ),
-              ),
+              sliver: SliverToBoxAdapter(child: _Header(value: value)),
             ),
             SliverPadding(
               padding: const EdgeInsets.all(20),
               sliver: SliverToBoxAdapter(
-                child: _HeroCard(
-                  revenue: value.monthRevenue,
-                  profit: value.monthProfit,
-                  money: money,
-                ),
+                child: _HeroCard(value: value, money: money),
               ),
             ),
             SliverPadding(
@@ -142,17 +103,33 @@ class DashboardPage extends ConsumerWidget {
                 ],
               ),
             ),
+            const _SectionTitle(
+              title: 'Inteligência financeira',
+              subtitle: 'Últimos 12 meses',
+            ),
             SliverPadding(
-              padding: const EdgeInsets.fromLTRB(20, 20, 20, 8),
+              padding: const EdgeInsets.fromLTRB(20, 0, 20, 12),
               sliver: SliverToBoxAdapter(
-                child: Text(
-                  'Alertas e agenda',
-                  style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                        fontWeight: FontWeight.w800,
-                      ),
+                child: _MonthlyFinanceChart(points: value.monthlyHistory, money: money),
+              ),
+            ),
+            SliverPadding(
+              padding: const EdgeInsets.fromLTRB(20, 0, 20, 12),
+              sliver: SliverToBoxAdapter(
+                child: _CashEvolutionChart(points: value.cashEvolution, money: money),
+              ),
+            ),
+            SliverPadding(
+              padding: const EdgeInsets.fromLTRB(20, 0, 20, 12),
+              sliver: SliverToBoxAdapter(
+                child: _ExpenseCategoryChart(
+                  points: value.expenseCategories,
+                  total: value.monthExpenses,
+                  money: money,
                 ),
               ),
             ),
+            const _SectionTitle(title: 'Alertas e agenda'),
             SliverPadding(
               padding: const EdgeInsets.fromLTRB(20, 0, 20, 12),
               sliver: SliverGrid.count(
@@ -212,63 +189,526 @@ class DashboardPage extends ConsumerWidget {
   }
 }
 
+class _Header extends StatelessWidget {
+  const _Header({required this.value});
+
+  final DashboardSummary value;
+
+  @override
+  Widget build(BuildContext context) {
+    return Row(
+      children: [
+        Expanded(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                'ERP DUO PRINT 3D',
+                style: Theme.of(context).textTheme.labelLarge?.copyWith(
+                      color: Theme.of(context).colorScheme.primary,
+                      fontWeight: FontWeight.w800,
+                    ),
+              ),
+              const SizedBox(height: 5),
+              Text(
+                'Visão executiva',
+                style: Theme.of(context).textTheme.headlineSmall?.copyWith(
+                      fontWeight: FontWeight.w800,
+                    ),
+              ),
+              Text(
+                value.overdueFinancial > 0
+                    ? '${value.overdueFinancial} conta(s) vencida(s) precisam de atenção.'
+                    : 'Produção, financeiro e operação em um só lugar.',
+              ),
+            ],
+          ),
+        ),
+        const CircleAvatar(radius: 24, child: Icon(Icons.auto_graph_outlined)),
+      ],
+    );
+  }
+}
+
 class _HeroCard extends StatelessWidget {
-  const _HeroCard({
-    required this.revenue,
-    required this.profit,
+  const _HeroCard({required this.value, required this.money});
+
+  final DashboardSummary value;
+  final NumberFormat money;
+
+  @override
+  Widget build(BuildContext context) {
+    final variation = value.profitVariationPercent;
+    final positive = variation >= 0;
+
+    return Card(
+      child: Padding(
+        padding: const EdgeInsets.all(20),
+        child: Column(
+          children: [
+            Row(
+              children: [
+                Expanded(
+                  child: _HeroValue(
+                    label: 'Faturamento do mês',
+                    value: money.format(value.monthRevenue),
+                  ),
+                ),
+                Container(width: 1, height: 54, color: Theme.of(context).dividerColor),
+                const SizedBox(width: 18),
+                Expanded(
+                  child: _HeroValue(
+                    label: 'Lucro do mês',
+                    value: money.format(value.monthProfit),
+                    highlight: true,
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 16),
+            Row(
+              children: [
+                Icon(
+                  positive ? Icons.trending_up : Icons.trending_down,
+                  size: 18,
+                  color: positive
+                      ? Theme.of(context).colorScheme.primary
+                      : Theme.of(context).colorScheme.error,
+                ),
+                const SizedBox(width: 6),
+                Text(
+                  '${positive ? '+' : ''}${variation.toStringAsFixed(1)}% em relação ao mês anterior',
+                  style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                        fontWeight: FontWeight.w700,
+                      ),
+                ),
+              ],
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class _HeroValue extends StatelessWidget {
+  const _HeroValue({required this.label, required this.value, this.highlight = false});
+
+  final String label;
+  final String value;
+  final bool highlight;
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(label),
+        const SizedBox(height: 4),
+        Text(
+          value,
+          maxLines: 1,
+          overflow: TextOverflow.ellipsis,
+          style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                fontWeight: FontWeight.w900,
+                color: highlight ? Theme.of(context).colorScheme.primary : null,
+              ),
+        ),
+      ],
+    );
+  }
+}
+
+class _SectionTitle extends StatelessWidget {
+  const _SectionTitle({required this.title, this.subtitle});
+
+  final String title;
+  final String? subtitle;
+
+  @override
+  Widget build(BuildContext context) {
+    return SliverPadding(
+      padding: const EdgeInsets.fromLTRB(20, 20, 20, 8),
+      sliver: SliverToBoxAdapter(
+        child: Row(
+          children: [
+            Expanded(
+              child: Text(
+                title,
+                style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                      fontWeight: FontWeight.w800,
+                    ),
+              ),
+            ),
+            if (subtitle != null)
+              Text(subtitle!, style: Theme.of(context).textTheme.bodySmall),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class _MonthlyFinanceChart extends StatelessWidget {
+  const _MonthlyFinanceChart({required this.points, required this.money});
+
+  final List<MonthlyFinancePoint> points;
+  final NumberFormat money;
+
+  @override
+  Widget build(BuildContext context) {
+    final maxValue = points.fold<double>(0, (maxValue, point) {
+      return math.max(maxValue, math.max(point.revenue, point.expenses));
+    });
+
+    return _ChartCard(
+      title: 'Receita × despesa',
+      subtitle: 'Comparativo mensal',
+      footer: const _Legend(),
+      child: SizedBox(
+        height: 230,
+        child: LayoutBuilder(
+          builder: (context, constraints) {
+            return Row(
+              crossAxisAlignment: CrossAxisAlignment.end,
+              children: points.map((point) {
+                final revenueHeight = maxValue == 0 ? 0.0 : (point.revenue / maxValue) * 145;
+                final expenseHeight = maxValue == 0 ? 0.0 : (point.expenses / maxValue) * 145;
+                return Expanded(
+                  child: Tooltip(
+                    message: '${DateFormat.MMM('pt_BR').format(point.month)}\n'
+                        'Receita: ${money.format(point.revenue)}\n'
+                        'Despesa: ${money.format(point.expenses)}',
+                    child: Column(
+                      mainAxisAlignment: MainAxisAlignment.end,
+                      children: [
+                        Expanded(
+                          child: Row(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            crossAxisAlignment: CrossAxisAlignment.end,
+                            children: [
+                              _Bar(height: revenueHeight, emphasized: true),
+                              const SizedBox(width: 2),
+                              _Bar(height: expenseHeight, emphasized: false),
+                            ],
+                          ),
+                        ),
+                        const SizedBox(height: 8),
+                        Text(
+                          DateFormat.MMM('pt_BR').format(point.month).replaceAll('.', ''),
+                          style: Theme.of(context).textTheme.labelSmall,
+                        ),
+                      ],
+                    ),
+                  ),
+                );
+              }).toList(),
+            );
+          },
+        ),
+      ),
+    );
+  }
+}
+
+class _Bar extends StatelessWidget {
+  const _Bar({required this.height, required this.emphasized});
+
+  final double height;
+  final bool emphasized;
+
+  @override
+  Widget build(BuildContext context) {
+    return AnimatedContainer(
+      duration: const Duration(milliseconds: 450),
+      curve: Curves.easeOutCubic,
+      width: 7,
+      height: math.max(height, 3),
+      decoration: BoxDecoration(
+        color: emphasized
+            ? Theme.of(context).colorScheme.primary
+            : Theme.of(context).colorScheme.secondaryContainer,
+        borderRadius: const BorderRadius.vertical(top: Radius.circular(5)),
+      ),
+    );
+  }
+}
+
+class _Legend extends StatelessWidget {
+  const _Legend();
+
+  @override
+  Widget build(BuildContext context) {
+    return Row(
+      mainAxisAlignment: MainAxisAlignment.center,
+      children: [
+        _LegendItem(label: 'Receita', color: Theme.of(context).colorScheme.primary),
+        const SizedBox(width: 18),
+        _LegendItem(
+          label: 'Despesa',
+          color: Theme.of(context).colorScheme.secondaryContainer,
+        ),
+      ],
+    );
+  }
+}
+
+class _LegendItem extends StatelessWidget {
+  const _LegendItem({required this.label, required this.color});
+
+  final String label;
+  final Color color;
+
+  @override
+  Widget build(BuildContext context) {
+    return Row(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        Container(
+          width: 10,
+          height: 10,
+          decoration: BoxDecoration(color: color, borderRadius: BorderRadius.circular(3)),
+        ),
+        const SizedBox(width: 6),
+        Text(label, style: Theme.of(context).textTheme.bodySmall),
+      ],
+    );
+  }
+}
+
+class _CashEvolutionChart extends StatelessWidget {
+  const _CashEvolutionChart({required this.points, required this.money});
+
+  final List<CashPoint> points;
+  final NumberFormat money;
+
+  @override
+  Widget build(BuildContext context) {
+    final current = points.isEmpty ? 0.0 : points.last.balance;
+    return _ChartCard(
+      title: 'Evolução do caixa',
+      subtitle: 'Últimos 30 dias',
+      trailing: Text(
+        money.format(current),
+        style: Theme.of(context).textTheme.titleMedium?.copyWith(
+              fontWeight: FontWeight.w900,
+              color: Theme.of(context).colorScheme.primary,
+            ),
+      ),
+      child: SizedBox(
+        height: 180,
+        child: points.isEmpty
+            ? const _EmptyChart(message: 'Sem movimentações no período')
+            : CustomPaint(
+                painter: _LineChartPainter(
+                  values: points.map((point) => point.balance).toList(growable: false),
+                  lineColor: Theme.of(context).colorScheme.primary,
+                  gridColor: Theme.of(context).dividerColor,
+                  fillColor: Theme.of(context).colorScheme.primary.withValues(alpha: 0.10),
+                ),
+                child: const SizedBox.expand(),
+              ),
+      ),
+    );
+  }
+}
+
+class _LineChartPainter extends CustomPainter {
+  const _LineChartPainter({
+    required this.values,
+    required this.lineColor,
+    required this.gridColor,
+    required this.fillColor,
+  });
+
+  final List<double> values;
+  final Color lineColor;
+  final Color gridColor;
+  final Color fillColor;
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    final gridPaint = Paint()..color = gridColor..strokeWidth = 1;
+    for (var i = 1; i < 4; i++) {
+      final y = size.height * i / 4;
+      canvas.drawLine(Offset(0, y), Offset(size.width, y), gridPaint);
+    }
+
+    if (values.length < 2) return;
+    var minValue = values.reduce(math.min);
+    var maxValue = values.reduce(math.max);
+    if (minValue == maxValue) {
+      minValue -= 1;
+      maxValue += 1;
+    }
+
+    final path = Path();
+    final fillPath = Path();
+    for (var i = 0; i < values.length; i++) {
+      final x = size.width * i / (values.length - 1);
+      final normalized = (values[i] - minValue) / (maxValue - minValue);
+      final y = size.height - (normalized * (size.height - 16)) - 8;
+      if (i == 0) {
+        path.moveTo(x, y);
+        fillPath.moveTo(x, size.height);
+        fillPath.lineTo(x, y);
+      } else {
+        path.lineTo(x, y);
+        fillPath.lineTo(x, y);
+      }
+    }
+    fillPath.lineTo(size.width, size.height);
+    fillPath.close();
+
+    canvas.drawPath(fillPath, Paint()..color = fillColor);
+    canvas.drawPath(
+      path,
+      Paint()
+        ..color = lineColor
+        ..strokeWidth = 3
+        ..style = PaintingStyle.stroke
+        ..strokeCap = StrokeCap.round
+        ..strokeJoin = StrokeJoin.round,
+    );
+  }
+
+  @override
+  bool shouldRepaint(covariant _LineChartPainter oldDelegate) {
+    return oldDelegate.values != values || oldDelegate.lineColor != lineColor;
+  }
+}
+
+class _ExpenseCategoryChart extends StatelessWidget {
+  const _ExpenseCategoryChart({
+    required this.points,
+    required this.total,
     required this.money,
   });
 
-  final double revenue;
-  final double profit;
+  final List<ExpenseCategoryPoint> points;
+  final double total;
   final NumberFormat money;
+
+  @override
+  Widget build(BuildContext context) {
+    return _ChartCard(
+      title: 'Despesas por categoria',
+      subtitle: 'Mês atual',
+      trailing: Text(
+        money.format(total),
+        style: Theme.of(context).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w900),
+      ),
+      child: points.isEmpty
+          ? const SizedBox(
+              height: 120,
+              child: _EmptyChart(message: 'Nenhuma despesa paga neste mês'),
+            )
+          : Column(
+              children: points.map((point) {
+                final fraction = total <= 0 ? 0.0 : point.amount / total;
+                return Padding(
+                  padding: const EdgeInsets.only(bottom: 14),
+                  child: Column(
+                    children: [
+                      Row(
+                        children: [
+                          Expanded(
+                            child: Text(
+                              point.category,
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                            ),
+                          ),
+                          Text(
+                            '${(fraction * 100).toStringAsFixed(0)}%  •  ${money.format(point.amount)}',
+                            style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                                  fontWeight: FontWeight.w700,
+                                ),
+                          ),
+                        ],
+                      ),
+                      const SizedBox(height: 6),
+                      LinearProgressIndicator(value: fraction.clamp(0, 1), minHeight: 8),
+                    ],
+                  ),
+                );
+              }).toList(),
+            ),
+    );
+  }
+}
+
+class _ChartCard extends StatelessWidget {
+  const _ChartCard({
+    required this.title,
+    required this.subtitle,
+    required this.child,
+    this.trailing,
+    this.footer,
+  });
+
+  final String title;
+  final String subtitle;
+  final Widget child;
+  final Widget? trailing;
+  final Widget? footer;
 
   @override
   Widget build(BuildContext context) {
     return Card(
       child: Padding(
-        padding: const EdgeInsets.all(20),
-        child: Row(
+        padding: const EdgeInsets.all(18),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  const Text('Faturamento do mês'),
-                  const SizedBox(height: 4),
-                  Text(
-                    money.format(revenue),
-                    style: Theme.of(context).textTheme.headlineMedium?.copyWith(
-                          fontWeight: FontWeight.w900,
-                        ),
+            Row(
+              children: [
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        title,
+                        style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                              fontWeight: FontWeight.w800,
+                            ),
+                      ),
+                      Text(subtitle, style: Theme.of(context).textTheme.bodySmall),
+                    ],
                   ),
-                ],
-              ),
+                ),
+                // ignore: use_null_aware_elements
+                if (trailing != null) trailing!,
+              ],
             ),
-            Container(
-              width: 1,
-              height: 54,
-              color: Theme.of(context).dividerColor,
-            ),
-            const SizedBox(width: 18),
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  const Text('Lucro do mês'),
-                  const SizedBox(height: 4),
-                  Text(
-                    money.format(profit),
-                    style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                          fontWeight: FontWeight.w900,
-                          color: Theme.of(context).colorScheme.primary,
-                        ),
-                  ),
-                ],
-              ),
-            ),
+            const SizedBox(height: 18),
+            child,
+            if (footer != null) ...[
+              const SizedBox(height: 14),
+              footer!,
+            ],
           ],
         ),
+      ),
+    );
+  }
+}
+
+class _EmptyChart extends StatelessWidget {
+  const _EmptyChart({required this.message});
+
+  final String message;
+
+  @override
+  Widget build(BuildContext context) {
+    return Center(
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Icon(Icons.insert_chart_outlined, color: Theme.of(context).colorScheme.outline),
+          const SizedBox(height: 8),
+          Text(message, style: Theme.of(context).textTheme.bodySmall),
+        ],
       ),
     );
   }
@@ -346,10 +786,7 @@ class _AlertCard extends StatelessWidget {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(title),
-                    Text(
-                      value,
-                      style: const TextStyle(fontWeight: FontWeight.w800),
-                    ),
+                    Text(value, style: const TextStyle(fontWeight: FontWeight.w800)),
                   ],
                 ),
               ),

@@ -207,6 +207,20 @@ class AppDatabase extends GeneratedDatabase {
       )
     ''');
 
+    await customStatement('''
+      CREATE TABLE IF NOT EXISTS cash_transactions (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        date INTEGER NOT NULL,
+        description TEXT NOT NULL,
+        amount REAL NOT NULL,
+        type TEXT NOT NULL,
+        category TEXT NOT NULL DEFAULT '',
+        finance_entry_id INTEGER UNIQUE,
+        created_at INTEGER NOT NULL,
+        FOREIGN KEY(finance_entry_id) REFERENCES financial_entries(id)
+      )
+    ''');
+
 
     await _ensureColumn(
       'quotes',
@@ -240,6 +254,10 @@ class AppDatabase extends GeneratedDatabase {
     await customStatement(
       'CREATE INDEX IF NOT EXISTS idx_financial_due_date '
       'ON financial_entries(due_date)',
+    );
+    await customStatement(
+      'CREATE INDEX IF NOT EXISTS idx_cash_transactions_date '
+      'ON cash_transactions(date)',
     );
     await customStatement(
       'CREATE INDEX IF NOT EXISTS idx_invoices_status ON invoices(status)',

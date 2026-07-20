@@ -1,7 +1,7 @@
 name: erp_duo_print_3d
 description: ERP Duo Print 3D - Founders Edition
 publish_to: "none"
-version: 0.6.2+17
+version: 0.7.3+21
 
 environment:
   sdk: ">=3.10.0 <4.0.0"

@@ -9,6 +9,7 @@ import '../../features/customers/presentation/customers_page.dart';
 import '../../features/dashboard/presentation/dashboard_page.dart';
 import '../../features/filaments/presentation/filament_form_page.dart';
 import '../../features/filaments/presentation/filaments_page.dart';
+import '../../features/finance/presentation/cash_flow_page.dart';
 import '../../features/finance/presentation/finance_form_page.dart';
 import '../../features/finance/presentation/finance_page.dart';
 import '../../features/printers/presentation/printer_form_page.dart';
@@ -130,6 +131,10 @@ final appRouterProvider = Provider<GoRouter>((ref) {
               GoRoute(
                 path: 'new',
                 builder: (context, state) => const FinanceFormPage(),
+              ),
+              GoRoute(
+                path: 'cash-flow',
+                builder: (context, state) => const CashFlowPage(),
               ),
             ],
           ),

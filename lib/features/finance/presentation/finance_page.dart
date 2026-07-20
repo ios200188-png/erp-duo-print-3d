@@ -60,6 +60,15 @@ class FinancePage extends ConsumerWidget {
                 ],
               ),
             ),
+            const SizedBox(height: 14),
+            OutlinedButton.icon(
+              onPressed: () => context.go('/finance/cash-flow'),
+              icon: const Icon(Icons.account_balance_wallet_outlined),
+              label: const Padding(
+                padding: EdgeInsets.symmetric(vertical: 12),
+                child: Text('ABRIR FLUXO DE CAIXA'),
+              ),
+            ),
             const SizedBox(height: 20),
             Text(
               'Lançamentos',
