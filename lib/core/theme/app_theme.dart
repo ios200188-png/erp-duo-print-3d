@@ -366,23 +366,25 @@ abstract final class AppTheme {
       ),
 
       dividerTheme: const DividerThemeData(
-        color: border,
-        thickness: 1,
-        space: 1,
-      ),
+  color: border,
+  thickness: 1,
+  space: 1,
+),
 
-      tooltipTheme: TooltipThemeData(
-        decoration: BoxDecoration(
-          color: surfaceHigh,
-          borderRadius: BorderRadius.circular(8),
-          border: Border.all(color: border),
-        ),
-        textStyle: const TextStyle(color: textPrimary),
-      ),
+tooltipTheme: TooltipThemeData(
+  decoration: BoxDecoration(
+    color: surfaceHigh,
+    borderRadius: BorderRadius.circular(8),
+    border: Border.all(color: border),
+  ),
+  textStyle: const TextStyle(color: textPrimary),
+),
 
-      selectionAreaTheme: const SelectionAreaThemeData(
-        selectionHandleColor: bluePrimary,
-      ),
-    );
+textSelectionTheme: const TextSelectionThemeData(
+  cursorColor: bluePrimary,
+  selectionColor: Color(0x551260DC),
+  selectionHandleColor: bluePrimary,
+),
+);
   }
 }
