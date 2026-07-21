@@ -14,6 +14,7 @@ class BusinessSettings {
     required this.maintenancePercent,
     required this.failurePercent,
     required this.idealMarginPercent,
+    required this.defaultObservation,
   });
 
   final String companyName;
@@ -30,6 +31,7 @@ class BusinessSettings {
   final double maintenancePercent;
   final double failurePercent;
   final double idealMarginPercent;
+  final String defaultObservation;
 
   factory BusinessSettings.fromMap(Map<String, Object?> map) {
     return BusinessSettings(
@@ -48,6 +50,7 @@ class BusinessSettings {
           .toDouble(),
       failurePercent: (map['failure_percent']! as num).toDouble(),
       idealMarginPercent: (map['ideal_margin_percent']! as num).toDouble(),
+      defaultObservation: (map['default_observation'] as String?) ?? '',
     );
   }
 }

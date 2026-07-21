@@ -1,7 +1,7 @@
 name: erp_duo_print_3d
 description: ERP Duo Print 3D - Founders Edition
 publish_to: "none"
-version: 0.7.4+22
+version: 1.1.0+30
 
 environment:
   sdk: ">=3.10.0 <4.0.0"
@@ -16,6 +16,7 @@ dependencies:
   drift_flutter: ^0.3.1
   pdf: ^3.13.0
   printing: ^5.15.0
+  supabase_flutter: ^2.16.0
 
 dev_dependencies:
   flutter_test:

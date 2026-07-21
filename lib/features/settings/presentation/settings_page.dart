@@ -1,11 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 
 class SettingsPage extends StatelessWidget {
   const SettingsPage({super.key});
 
   @override
   Widget build(BuildContext context) {
+    final user = Supabase.instance.client.auth.currentUser;
     return Scaffold(
       appBar: AppBar(
         title: const Text('Configurações'),
@@ -34,11 +36,21 @@ class SettingsPage extends StatelessWidget {
             ),
           ),
           const SizedBox(height: 12),
+          Card(
+            child: ListTile(
+              onTap: () => context.go('/cloud'),
+              leading: const Icon(Icons.cloud_outlined),
+              title: const Text('Nuvem e sincronização'),
+              subtitle: Text(user?.email ?? 'Conta não identificada'),
+              trailing: const Icon(Icons.chevron_right),
+            ),
+          ),
+          const SizedBox(height: 12),
           const Card(
             child: ListTile(
               leading: Icon(Icons.info_outline),
               title: Text('Versão'),
-              subtitle: Text('Founders Edition 0.6.2'),
+              subtitle: Text('Cloud 1.1.0'),
             ),
           ),
         ],

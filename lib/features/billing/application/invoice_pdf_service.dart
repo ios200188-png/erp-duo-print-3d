@@ -63,30 +63,31 @@ class InvoicePdfService {
           ),
           pw.SizedBox(height: 22),
           _sectionTitle('DADOS DA DUO PRINT 3D'),
-          _info(company.companyName),
+          _info(_pdfSafeText(company.companyName)),
           if (company.document.isNotEmpty)
-            _info('Documento: ${company.document}'),
-          if (company.address.isNotEmpty) _info(company.address),
-          if (company.city.isNotEmpty) _info(company.city),
+            _info(_pdfSafeText('Documento: ${company.document}')),
+          if (company.address.isNotEmpty) _info(_pdfSafeText(company.address)),
+          if (company.city.isNotEmpty) _info(_pdfSafeText(company.city)),
           if (company.whatsapp.isNotEmpty)
-            _info('WhatsApp: ${company.whatsapp}'),
-          if (company.email.isNotEmpty) _info('E-mail: ${company.email}'),
+            _info(_pdfSafeText('WhatsApp: ${company.whatsapp}')),
+          if (company.email.isNotEmpty)
+            _info(_pdfSafeText('E-mail: ${company.email}')),
           pw.SizedBox(height: 18),
           _sectionTitle('CLIENTE'),
-          _info(invoice.customerName),
+          _info(_pdfSafeText(invoice.customerName)),
           if (invoice.customerDocument.isNotEmpty)
-            _info('Documento: ${invoice.customerDocument}'),
+            _info(_pdfSafeText('Documento: ${invoice.customerDocument}')),
           if (invoice.customerPhone.isNotEmpty)
-            _info('Telefone: ${invoice.customerPhone}'),
+            _info(_pdfSafeText('Telefone: ${invoice.customerPhone}')),
           if (invoice.customerEmail.isNotEmpty)
-            _info('E-mail: ${invoice.customerEmail}'),
+            _info(_pdfSafeText('E-mail: ${invoice.customerEmail}')),
           pw.SizedBox(height: 18),
           _sectionTitle('PRODUTO / SERVIÇO'),
           pw.TableHelper.fromTextArray(
             headers: const ['Descrição', 'Qtd.', 'Valor total'],
             data: [
               [
-                invoice.projectName,
+                _pdfSafeText(invoice.projectName),
                 invoice.quantity.toString(),
                 money.format(invoice.salePrice),
               ],
@@ -102,9 +103,10 @@ class InvoicePdfService {
           ),
           pw.SizedBox(height: 18),
           _sectionTitle('PAGAMENTO'),
-          _info('Forma de pagamento: ${invoice.paymentMethod}'),
-          _info('Status: ${invoice.status}'),
-          if (invoice.notes.isNotEmpty) _info('Observações: ${invoice.notes}'),
+          _info(_pdfSafeText('Forma de pagamento: ${invoice.paymentMethod}')),
+          _info(_pdfSafeText('Status: ${invoice.status}')),
+          if (invoice.notes.isNotEmpty)
+            _info(_pdfSafeText('Observações: ${invoice.notes}')),
           pw.SizedBox(height: 18),
           pw.Container(
             width: double.infinity,
@@ -138,7 +140,7 @@ class InvoicePdfService {
             style: const pw.TextStyle(fontSize: 9, color: PdfColors.grey700),
           ),
           pw.Text(
-            'Duo Print 3D — Imprimindo ideias. Criando soluções.',
+            'Duo Print 3D - Imprimindo ideias. Criando soluções.',
             style: const pw.TextStyle(fontSize: 9, color: PdfColors.grey700),
           ),
         ],
@@ -146,6 +148,19 @@ class InvoicePdfService {
     );
 
     return document.save();
+  }
+
+  static String _pdfSafeText(String text) {
+    return text
+        .replaceAll('×', 'x')
+        .replaceAll('✕', 'x')
+        .replaceAll('—', '-')
+        .replaceAll('–', '-')
+        .replaceAll('•', '-')
+        .replaceAll('“', '"')
+        .replaceAll('”', '"')
+        .replaceAll('‘', "'")
+        .replaceAll('’', "'");
   }
 
   static pw.Widget _sectionTitle(String text) {

@@ -4,6 +4,7 @@ import 'package:go_router/go_router.dart';
 import '../../features/agenda/presentation/agenda_page.dart';
 import '../../features/billing/presentation/billing_form_page.dart';
 import '../../features/billing/presentation/billing_page.dart';
+import '../../features/cloud/presentation/cloud_sync_page.dart';
 import '../../features/customers/presentation/customer_form_page.dart';
 import '../../features/customers/presentation/customers_page.dart';
 import '../../features/dashboard/presentation/dashboard_page.dart';
@@ -191,6 +192,10 @@ final appRouterProvider = Provider<GoRouter>((ref) {
                 ),
               ),
             ],
+          ),
+          GoRoute(
+            path: '/cloud',
+            builder: (context, state) => const CloudSyncPage(),
           ),
           GoRoute(
             path: '/settings',

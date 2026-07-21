@@ -37,7 +37,7 @@ class BusinessSettingsRepository {
           address = ?, city = ?, kwh_price = ?, printer_power_w = ?,
           labor_hour = ?, machine_hour = ?, packaging_cost = ?,
           maintenance_percent = ?, failure_percent = ?,
-          ideal_margin_percent = ?, updated_at = ?
+          ideal_margin_percent = ?, default_observation = ?, updated_at = ?
       WHERE id = 1
       ''',
       [
@@ -55,6 +55,7 @@ class BusinessSettingsRepository {
         settings.maintenancePercent,
         settings.failurePercent,
         settings.idealMarginPercent,
+        settings.defaultObservation,
         DateTime.now().millisecondsSinceEpoch,
       ],
     );

@@ -54,37 +54,51 @@ class QuotePdfService {
           ),
           pw.SizedBox(height: 22),
           _sectionTitle('DADOS DA DUO PRINT 3D'),
-          _info(company.companyName),
+          _info(_pdfSafeText(company.companyName)),
           if (company.document.isNotEmpty)
-            _info('Documento: ${company.document}'),
-          if (company.address.isNotEmpty) _info(company.address),
-          if (company.city.isNotEmpty) _info(company.city),
+            _info(_pdfSafeText('Documento: ${company.document}')),
+          if (company.address.isNotEmpty) _info(_pdfSafeText(company.address)),
+          if (company.city.isNotEmpty) _info(_pdfSafeText(company.city)),
           if (company.whatsapp.isNotEmpty)
-            _info('WhatsApp: ${company.whatsapp}'),
-          if (company.email.isNotEmpty) _info('E-mail: ${company.email}'),
+            _info(_pdfSafeText('WhatsApp: ${company.whatsapp}')),
+          if (company.email.isNotEmpty)
+            _info(_pdfSafeText('E-mail: ${company.email}')),
           pw.SizedBox(height: 18),
           _sectionTitle('CLIENTE'),
-          _info(quote.customerName),
+          _info(_pdfSafeText(quote.customerName)),
           if (quote.customerDocument.isNotEmpty)
-            _info('Documento: ${quote.customerDocument}'),
+            _info(_pdfSafeText('Documento: ${quote.customerDocument}')),
           if (quote.customerPhone.isNotEmpty)
-            _info('Telefone: ${quote.customerPhone}'),
+            _info(_pdfSafeText('Telefone: ${quote.customerPhone}')),
           if (quote.customerEmail.isNotEmpty)
-            _info('E-mail: ${quote.customerEmail}'),
+            _info(_pdfSafeText('E-mail: ${quote.customerEmail}')),
           pw.SizedBox(height: 18),
-          _sectionTitle('PRODUTO / SERVIÇO'),
+          _sectionTitle('PRODUTOS / SERVIÇOS'),
           pw.TableHelper.fromTextArray(
-            headers: const ['Descrição', 'Material', 'Qtd.', 'Valor total'],
-            data: [
-              [
-                quote.projectVersion.isEmpty
-                    ? quote.projectName
-                    : '${quote.projectName} — ${quote.projectVersion}',
-                '${quote.materialName} (${quote.materialType})',
-                quote.quantity.toString(),
-                money.format(quote.salePrice),
-              ],
+            headers: const [
+              'Descrição',
+              'Material',
+              'Qtd.',
+              'Valor unit.',
+              'Valor total',
             ],
+            data: quote.items
+                .map(
+                  (item) => [
+                    _pdfSafeText(
+                      item.description.isEmpty
+                          ? (item.projectVersion.isEmpty
+                                ? item.projectName
+                                : '${item.projectName} - ${item.projectVersion}')
+                          : item.description,
+                    ),
+                    _pdfSafeText('${item.materialName} (${item.materialType})'),
+                    item.quantity.toString(),
+                    money.format(item.unitPrice),
+                    money.format(item.totalPrice),
+                  ],
+                )
+                .toList(),
             headerDecoration: pw.BoxDecoration(
               color: PdfColor.fromHex('#1260DC'),
             ),
@@ -97,7 +111,7 @@ class QuotePdfService {
           pw.SizedBox(height: 18),
           if (quote.notes.isNotEmpty) ...[
             _sectionTitle('OBSERVAÇÕES'),
-            _info(quote.notes),
+            _info(_pdfSafeText(quote.notes)),
             pw.SizedBox(height: 18),
           ],
           pw.Container(
@@ -107,20 +121,33 @@ class QuotePdfService {
               color: PdfColor.fromHex('#EEF4FF'),
               borderRadius: pw.BorderRadius.circular(6),
             ),
-            child: pw.Row(
+            child: pw.Column(
               children: [
-                pw.Text(
-                  'TOTAL DO ORÇAMENTO',
-                  style: const pw.TextStyle(fontWeight: pw.FontWeight.bold),
-                ),
-                pw.Spacer(),
-                pw.Text(
-                  money.format(quote.salePrice),
-                  style: pw.TextStyle(
-                    fontSize: 22,
-                    fontWeight: pw.FontWeight.bold,
-                    color: PdfColor.fromHex('#1260DC'),
+                _totalRow('Subtotal', money.format(quote.subtotal)),
+                if (quote.discountAmount > 0)
+                  _totalRow(
+                    quote.discountType == 'Valor'
+                        ? 'Desconto'
+                        : 'Desconto (${quote.discountValue.toStringAsFixed(2)}%)',
+                    '- ${money.format(quote.discountAmount)}',
                   ),
+                pw.Divider(),
+                pw.Row(
+                  children: [
+                    pw.Text(
+                      'TOTAL DO ORÇAMENTO',
+                      style: const pw.TextStyle(fontWeight: pw.FontWeight.bold),
+                    ),
+                    pw.Spacer(),
+                    pw.Text(
+                      money.format(quote.salePrice),
+                      style: pw.TextStyle(
+                        fontSize: 22,
+                        fontWeight: pw.FontWeight.bold,
+                        color: PdfColor.fromHex('#1260DC'),
+                      ),
+                    ),
+                  ],
                 ),
               ],
             ),
@@ -133,7 +160,7 @@ class QuotePdfService {
           pw.SizedBox(height: 30),
           pw.Divider(),
           pw.Text(
-            'Duo Print 3D — Imprimindo ideias. Criando soluções.',
+            'Duo Print 3D - Imprimindo ideias. Criando soluções.',
             style: const pw.TextStyle(fontSize: 9, color: PdfColors.grey700),
           ),
         ],
@@ -163,6 +190,26 @@ class QuotePdfService {
       bytes: bytes,
       filename: 'orcamento_duo_print_${quote.id}.pdf',
     );
+  }
+
+  static pw.Widget _totalRow(String label, String value) {
+    return pw.Padding(
+      padding: const pw.EdgeInsets.only(bottom: 4),
+      child: pw.Row(children: [pw.Text(label), pw.Spacer(), pw.Text(value)]),
+    );
+  }
+
+  static String _pdfSafeText(String text) {
+    return text
+        .replaceAll('×', 'x')
+        .replaceAll('✕', 'x')
+        .replaceAll('—', '-')
+        .replaceAll('–', '-')
+        .replaceAll('•', '-')
+        .replaceAll('“', '"')
+        .replaceAll('”', '"')
+        .replaceAll('‘', "'")
+        .replaceAll('’', "'");
   }
 
   static pw.Widget _sectionTitle(String text) {

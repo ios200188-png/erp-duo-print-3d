@@ -4,6 +4,7 @@ import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
 
 import '../../finance/data/finance_repository.dart';
+import '../../settings/data/business_settings_repository.dart';
 import '../data/billing_repository.dart';
 
 class BillingFormPage extends ConsumerStatefulWidget {
@@ -19,6 +20,7 @@ class _BillingFormPageState extends ConsumerState<BillingFormPage> {
   String _paymentMethod = 'PIX';
   DateTime _dueDate = DateTime.now();
   final _notes = TextEditingController();
+  bool _defaultObservationLoaded = false;
 
   @override
   void dispose() {
@@ -62,6 +64,13 @@ class _BillingFormPageState extends ConsumerState<BillingFormPage> {
   @override
   Widget build(BuildContext context) {
     final date = DateFormat('dd/MM/yyyy');
+    final settings = ref.watch(businessSettingsProvider);
+    settings.whenData((value) {
+      if (!_defaultObservationLoaded) {
+        _defaultObservationLoaded = true;
+        _notes.text = value.defaultObservation;
+      }
+    });
 
     return Scaffold(
       appBar: AppBar(title: const Text('Emitir faturamento')),

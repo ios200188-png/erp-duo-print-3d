@@ -29,6 +29,7 @@ class _BusinessSettingsPageState extends ConsumerState<BusinessSettingsPage> {
   final _maintenance = TextEditingController();
   final _failure = TextEditingController();
   final _margin = TextEditingController();
+  final _defaultObservation = TextEditingController();
   bool _loaded = false;
 
   double _number(String value) =>
@@ -59,6 +60,7 @@ class _BusinessSettingsPageState extends ConsumerState<BusinessSettingsPage> {
     _margin.text = value.idealMarginPercent
         .toStringAsFixed(1)
         .replaceAll('.', ',');
+    _defaultObservation.text = value.defaultObservation;
   }
 
   Future<void> _save() async {
@@ -82,6 +84,7 @@ class _BusinessSettingsPageState extends ConsumerState<BusinessSettingsPage> {
             maintenancePercent: _number(_maintenance.text),
             failurePercent: _number(_failure.text),
             idealMarginPercent: _number(_margin.text),
+            defaultObservation: _defaultObservation.text.trim(),
           ),
         );
 
@@ -118,6 +121,11 @@ class _BusinessSettingsPageState extends ConsumerState<BusinessSettingsPage> {
                 _field(_email, 'E-mail'),
                 _field(_address, 'Endereço'),
                 _field(_city, 'Cidade/UF'),
+                _field(
+                  _defaultObservation,
+                  'Observação padrão para orçamento e faturamento',
+                  lines: 4,
+                ),
                 const SizedBox(height: 10),
                 Text(
                   'Parâmetros de custos',
@@ -177,6 +185,7 @@ class _BusinessSettingsPageState extends ConsumerState<BusinessSettingsPage> {
     TextEditingController controller,
     String label, {
     bool number = false,
+    int lines = 1,
   }) {
     return Padding(
       padding: const EdgeInsets.only(bottom: 12),
@@ -185,6 +194,8 @@ class _BusinessSettingsPageState extends ConsumerState<BusinessSettingsPage> {
         keyboardType: number
             ? const TextInputType.numberWithOptions(decimal: true)
             : TextInputType.text,
+        minLines: lines,
+        maxLines: lines == 1 ? 1 : lines + 2,
         decoration: InputDecoration(labelText: label),
         validator: label.contains('*')
             ? (value) => value == null || value.trim().isEmpty

@@ -181,6 +181,11 @@ class AppDatabase extends GeneratedDatabase {
       'city',
       "TEXT NOT NULL DEFAULT ''",
     );
+    await _ensureColumn(
+      'business_settings',
+      'default_observation',
+      "TEXT NOT NULL DEFAULT ''",
+    );
     await customStatement('''
       CREATE TABLE IF NOT EXISTS products (
         id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -298,6 +303,79 @@ class AppDatabase extends GeneratedDatabase {
     ''');
 
     await _ensureColumn('quotes', 'product_id', 'INTEGER');
+    await _ensureColumn(
+      'quotes',
+      'maintenance_cost',
+      'REAL NOT NULL DEFAULT 0',
+    );
+    await _ensureColumn('quotes', 'subtotal', 'REAL NOT NULL DEFAULT 0');
+    await _ensureColumn(
+      'quotes',
+      'discount_type',
+      "TEXT NOT NULL DEFAULT 'Percentual'",
+    );
+    await _ensureColumn('quotes', 'discount_value', 'REAL NOT NULL DEFAULT 0');
+    await _ensureColumn('quotes', 'discount_amount', 'REAL NOT NULL DEFAULT 0');
+
+    await customStatement('''
+      CREATE TABLE IF NOT EXISTS quote_items (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        quote_id INTEGER NOT NULL,
+        product_id INTEGER,
+        project_id INTEGER NOT NULL,
+        filament_id INTEGER NOT NULL,
+        description TEXT NOT NULL DEFAULT '',
+        quantity INTEGER NOT NULL DEFAULT 1,
+        labor_minutes INTEGER NOT NULL DEFAULT 0,
+        additional_cost REAL NOT NULL DEFAULT 0,
+        material_cost REAL NOT NULL DEFAULT 0,
+        energy_cost REAL NOT NULL DEFAULT 0,
+        machine_cost REAL NOT NULL DEFAULT 0,
+        labor_cost REAL NOT NULL DEFAULT 0,
+        packaging_cost REAL NOT NULL DEFAULT 0,
+        maintenance_cost REAL NOT NULL DEFAULT 0,
+        failure_cost REAL NOT NULL DEFAULT 0,
+        total_cost REAL NOT NULL DEFAULT 0,
+        margin_percent REAL NOT NULL DEFAULT 0,
+        unit_price REAL NOT NULL DEFAULT 0,
+        total_price REAL NOT NULL DEFAULT 0,
+        created_at INTEGER NOT NULL,
+        updated_at INTEGER NOT NULL,
+        FOREIGN KEY(quote_id) REFERENCES quotes(id) ON DELETE CASCADE,
+        FOREIGN KEY(product_id) REFERENCES products(id),
+        FOREIGN KEY(project_id) REFERENCES projects(id),
+        FOREIGN KEY(filament_id) REFERENCES filaments(id)
+      )
+    ''');
+
+    await customStatement('''
+      INSERT INTO quote_items (
+        quote_id, product_id, project_id, filament_id, description, quantity,
+        labor_minutes, additional_cost, material_cost, energy_cost,
+        machine_cost, labor_cost, packaging_cost, maintenance_cost,
+        failure_cost, total_cost, margin_percent, unit_price, total_price,
+        created_at, updated_at
+      )
+      SELECT q.id, q.product_id, q.project_id, q.filament_id,
+             COALESCE(p.name, pr.name, 'Item do orçamento'), q.quantity,
+             q.labor_minutes, q.additional_cost, q.material_cost, q.energy_cost,
+             q.machine_cost, q.labor_cost, q.packaging_cost, q.maintenance_cost,
+             q.failure_cost, q.total_cost, q.margin_percent,
+             CASE WHEN q.quantity > 0 THEN q.sale_price / q.quantity ELSE q.sale_price END,
+             q.sale_price, q.created_at, q.updated_at
+      FROM quotes q
+      LEFT JOIN products p ON p.id = q.product_id
+      LEFT JOIN projects pr ON pr.id = q.project_id
+      WHERE NOT EXISTS (
+        SELECT 1 FROM quote_items qi WHERE qi.quote_id = q.id
+      )
+    ''');
+
+    await customStatement('''
+      UPDATE quotes
+      SET subtotal = sale_price
+      WHERE subtotal = 0 AND sale_price > 0
+    ''');
 
     await customStatement('''
       CREATE TABLE IF NOT EXISTS production_orders (
@@ -322,6 +400,7 @@ class AppDatabase extends GeneratedDatabase {
     ''');
 
     await _ensureColumn('production_orders', 'product_id', 'INTEGER');
+    await _ensureColumn('production_orders', 'quote_item_id', 'INTEGER');
     await _ensureColumn('production_orders', 'filament_id', 'INTEGER');
     await _ensureColumn(
       'production_orders',
@@ -467,9 +546,13 @@ class AppDatabase extends GeneratedDatabase {
     await customStatement(
       'CREATE INDEX IF NOT EXISTS idx_quotes_status ON quotes(status)',
     );
+    await customStatement('DROP INDEX IF EXISTS idx_production_quote_unique');
     await customStatement(
-      'CREATE UNIQUE INDEX IF NOT EXISTS idx_production_quote_unique '
-      'ON production_orders(quote_id) WHERE quote_id IS NOT NULL',
+      'CREATE UNIQUE INDEX IF NOT EXISTS idx_production_quote_item_unique '
+      'ON production_orders(quote_item_id) WHERE quote_item_id IS NOT NULL',
+    );
+    await customStatement(
+      'CREATE INDEX IF NOT EXISTS idx_quote_items_quote ON quote_items(quote_id)',
     );
     await customStatement(
       'CREATE INDEX IF NOT EXISTS idx_financial_due_date '

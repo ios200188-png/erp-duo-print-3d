@@ -311,10 +311,20 @@ class ProductionRepository {
       if (status == 'Concluído') {
         final quoteId = row.readNullable<int>('quote_id');
         if (quoteId != null) {
-          await _database.customStatement(
-            "UPDATE quotes SET status = 'Produzido', updated_at = ? WHERE id = ?",
-            [now, quoteId],
-          );
+          final pending = await _database
+              .customSelect(
+                "SELECT COUNT(*) AS total FROM production_orders "
+                "WHERE quote_id = ? AND status <> 'Concluído'",
+                variables: [Variable<int>(quoteId)],
+                readsFrom: const {},
+              )
+              .getSingle();
+          if (pending.read<int>('total') == 0) {
+            await _database.customStatement(
+              "UPDATE quotes SET status = 'Produzido', updated_at = ? WHERE id = ?",
+              [now, quoteId],
+            );
+          }
         }
       }
     });
