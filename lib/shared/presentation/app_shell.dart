@@ -12,7 +12,8 @@ class AppShell extends StatelessWidget {
     if (location.startsWith('/modules') ||
         location.startsWith('/filaments') ||
         location.startsWith('/printers') ||
-        location.startsWith('/projects')) {
+        location.startsWith('/projects') ||
+        location.startsWith('/products')) {
       return 2;
     }
     if (location.startsWith('/settings')) return 3;

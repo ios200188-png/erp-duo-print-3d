@@ -182,6 +182,93 @@ class AppDatabase extends GeneratedDatabase {
       "TEXT NOT NULL DEFAULT ''",
     );
     await customStatement('''
+      CREATE TABLE IF NOT EXISTS products (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        code TEXT NOT NULL UNIQUE,
+        name TEXT NOT NULL,
+        category TEXT NOT NULL DEFAULT '',
+        description TEXT NOT NULL DEFAULT '',
+        filament_id INTEGER,
+        printer_id INTEGER,
+        color TEXT NOT NULL DEFAULT '',
+        estimated_weight REAL NOT NULL DEFAULT 0,
+        print_minutes INTEGER NOT NULL DEFAULT 0,
+        labor_minutes INTEGER NOT NULL DEFAULT 0,
+        layer_height REAL NOT NULL DEFAULT 0.20,
+        infill_percent REAL NOT NULL DEFAULT 15,
+        wall_count INTEGER NOT NULL DEFAULT 2,
+        supports INTEGER NOT NULL DEFAULT 0,
+        nozzle_size REAL NOT NULL DEFAULT 0.4,
+        packaging_cost REAL NOT NULL DEFAULT 0,
+        additional_cost REAL NOT NULL DEFAULT 0,
+        total_cost REAL NOT NULL DEFAULT 0,
+        suggested_price REAL NOT NULL DEFAULT 0,
+        active INTEGER NOT NULL DEFAULT 1,
+        notes TEXT NOT NULL DEFAULT '',
+        created_at INTEGER NOT NULL,
+        updated_at INTEGER NOT NULL,
+        FOREIGN KEY(filament_id) REFERENCES filaments(id),
+        FOREIGN KEY(printer_id) REFERENCES printers(id)
+      )
+    ''');
+
+    await customStatement('''
+      CREATE TABLE IF NOT EXISTS product_images (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        product_id INTEGER NOT NULL,
+        file_path TEXT NOT NULL,
+        caption TEXT NOT NULL DEFAULT '',
+        is_primary INTEGER NOT NULL DEFAULT 0,
+        created_at INTEGER NOT NULL,
+        FOREIGN KEY(product_id) REFERENCES products(id) ON DELETE CASCADE
+      )
+    ''');
+
+    await customStatement('''
+      CREATE TABLE IF NOT EXISTS product_files (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        product_id INTEGER NOT NULL,
+        file_type TEXT NOT NULL,
+        file_name TEXT NOT NULL,
+        file_path TEXT NOT NULL,
+        version TEXT NOT NULL DEFAULT '',
+        notes TEXT NOT NULL DEFAULT '',
+        created_at INTEGER NOT NULL,
+        FOREIGN KEY(product_id) REFERENCES products(id) ON DELETE CASCADE
+      )
+    ''');
+
+    await customStatement('''
+      CREATE TABLE IF NOT EXISTS product_versions (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        product_id INTEGER NOT NULL,
+        version TEXT NOT NULL,
+        description TEXT NOT NULL DEFAULT '',
+        weight REAL NOT NULL DEFAULT 0,
+        print_minutes INTEGER NOT NULL DEFAULT 0,
+        created_at INTEGER NOT NULL,
+        FOREIGN KEY(product_id) REFERENCES products(id) ON DELETE CASCADE
+      )
+    ''');
+
+    await _ensureColumn(
+      'product_images',
+      'caption',
+      "TEXT NOT NULL DEFAULT ''",
+    );
+    await _ensureColumn('product_files', 'version', "TEXT NOT NULL DEFAULT ''");
+    await _ensureColumn(
+      'product_versions',
+      'weight',
+      'REAL NOT NULL DEFAULT 0',
+    );
+    await _ensureColumn(
+      'product_versions',
+      'print_minutes',
+      'INTEGER NOT NULL DEFAULT 0',
+    );
+
+    await customStatement('''
       CREATE TABLE IF NOT EXISTS quotes (
         id INTEGER PRIMARY KEY AUTOINCREMENT,
         customer_id INTEGER NOT NULL,
@@ -210,6 +297,8 @@ class AppDatabase extends GeneratedDatabase {
       )
     ''');
 
+    await _ensureColumn('quotes', 'product_id', 'INTEGER');
+
     await customStatement('''
       CREATE TABLE IF NOT EXISTS production_orders (
         id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -232,6 +321,7 @@ class AppDatabase extends GeneratedDatabase {
       )
     ''');
 
+    await _ensureColumn('production_orders', 'product_id', 'INTEGER');
     await _ensureColumn('production_orders', 'filament_id', 'INTEGER');
     await _ensureColumn(
       'production_orders',
@@ -278,6 +368,25 @@ class AppDatabase extends GeneratedDatabase {
       END
       WHERE status IN ('Planejada', 'Finalizada')
     """);
+
+    await customStatement(
+      'CREATE INDEX IF NOT EXISTS idx_products_name ON products(name)',
+    );
+    await customStatement(
+      'CREATE INDEX IF NOT EXISTS idx_product_images_product ON product_images(product_id)',
+    );
+    await customStatement(
+      'CREATE INDEX IF NOT EXISTS idx_product_files_product ON product_files(product_id)',
+    );
+    await customStatement(
+      'CREATE INDEX IF NOT EXISTS idx_product_versions_product ON product_versions(product_id)',
+    );
+    await customStatement(
+      'CREATE INDEX IF NOT EXISTS idx_quotes_product ON quotes(product_id)',
+    );
+    await customStatement(
+      'CREATE INDEX IF NOT EXISTS idx_production_product ON production_orders(product_id)',
+    );
 
     await customStatement('''
       CREATE TABLE IF NOT EXISTS financial_entries (
@@ -346,6 +455,15 @@ class AppDatabase extends GeneratedDatabase {
       )
     ''');
 
+    await customStatement(
+      'CREATE INDEX IF NOT EXISTS idx_products_name ON products(name COLLATE NOCASE)',
+    );
+    await customStatement(
+      'CREATE INDEX IF NOT EXISTS idx_products_category ON products(category COLLATE NOCASE)',
+    );
+    await customStatement(
+      'CREATE INDEX IF NOT EXISTS idx_products_active ON products(active)',
+    );
     await customStatement(
       'CREATE INDEX IF NOT EXISTS idx_quotes_status ON quotes(status)',
     );

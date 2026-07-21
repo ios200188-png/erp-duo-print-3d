@@ -89,6 +89,7 @@ class QuoteRepository {
 
   Future<void> save({
     required int customerId,
+    int? productId,
     required int projectId,
     required int filamentId,
     required int quantity,
@@ -102,15 +103,16 @@ class QuoteRepository {
     await _database.customStatement(
       '''
       INSERT INTO quotes (
-        customer_id, project_id, filament_id, quantity, labor_minutes,
+        customer_id, product_id, project_id, filament_id, quantity, labor_minutes,
         additional_cost, material_cost, energy_cost, machine_cost,
         labor_cost, packaging_cost, maintenance_cost, failure_cost,
         total_cost, margin_percent, sale_price, status, notes,
         created_at, updated_at
-      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
       ''',
       [
         customerId,
+        productId,
         projectId,
         filamentId,
         quantity,
@@ -139,7 +141,7 @@ class QuoteRepository {
       final quote = await _database
           .customSelect(
             '''
-        SELECT id, project_id, quantity, status
+        SELECT id, product_id, project_id, quantity, status
         FROM quotes
         WHERE id = ?
         LIMIT 1
@@ -164,17 +166,28 @@ class QuoteRepository {
       await _database.customStatement(
         '''
         INSERT OR IGNORE INTO production_orders (
-          quote_id, project_id, quantity_planned, quantity_produced,
-          status, priority, notes, created_at, updated_at
-        ) VALUES (?, ?, ?, 0, 'Aguardando', 'Normal', ?, ?, ?)
+          quote_id, product_id, project_id, printer_id, filament_id,
+          quantity_planned, quantity_produced, status, priority,
+          estimated_weight, estimated_minutes, notes, created_at, updated_at
+        )
+        SELECT ?, ?, ?, p.printer_id, p.filament_id, ?, 0,
+               'Aguardando', 'Normal',
+               COALESCE(p.estimated_weight, 0) * ?,
+               COALESCE(p.print_minutes, 0) * ?, ?, ?, ?
+        FROM (SELECT 1) x
+        LEFT JOIN products p ON p.id = ?
         ''',
         [
           quoteId,
+          quote.readNullable<int>('product_id'),
           quote.read<int>('project_id'),
+          quote.read<int>('quantity'),
+          quote.read<int>('quantity'),
           quote.read<int>('quantity'),
           'Gerada automaticamente após aprovação do orçamento.',
           now,
           now,
+          quote.readNullable<int>('product_id'),
         ],
       );
     });

@@ -5,6 +5,8 @@ import 'package:intl/intl.dart';
 
 import '../../customers/data/customer_repository.dart';
 import '../../filaments/data/filament_repository.dart';
+import '../../products/data/product_repository.dart';
+import '../../products/domain/product.dart';
 import '../../projects/data/project_repository.dart';
 import '../../settings/data/business_settings_repository.dart';
 import '../application/quote_calculator.dart';
@@ -20,6 +22,7 @@ class QuoteFormPage extends ConsumerStatefulWidget {
 
 class _QuoteFormPageState extends ConsumerState<QuoteFormPage> {
   int? _customerId;
+  int? _productId;
   int? _projectId;
   int? _filamentId;
 
@@ -49,6 +52,7 @@ class _QuoteFormPageState extends ConsumerState<QuoteFormPage> {
   @override
   Widget build(BuildContext context) {
     final customers = ref.watch(customersProvider);
+    final products = ref.watch(productsProvider);
     final projects = ref.watch(projectsProvider);
     final filaments = ref.watch(filamentsProvider);
     final settings = ref.watch(businessSettingsProvider);
@@ -69,6 +73,7 @@ class _QuoteFormPageState extends ConsumerState<QuoteFormPage> {
               loading: () => const Center(child: CircularProgressIndicator()),
               error: (error, _) => Center(child: Text('Erro: $error')),
               data: (business) {
+                final productItems = products.asData?.value ?? <Product>[];
                 if (_margin.text.isEmpty) {
                   _margin.text = business.idealMarginPercent
                       .toStringAsFixed(1)
@@ -101,6 +106,46 @@ class _QuoteFormPageState extends ConsumerState<QuoteFormPage> {
                           )
                           .toList(),
                       onChanged: (value) => setState(() => _customerId = value),
+                    ),
+                    const SizedBox(height: 12),
+                    DropdownButtonFormField<int?>(
+                      initialValue: _productId,
+                      decoration: const InputDecoration(
+                        labelText: 'Produto inteligente',
+                        helperText:
+                            'Preenche material, custos e preço automaticamente.',
+                      ),
+                      items: [
+                        const DropdownMenuItem<int?>(
+                          value: null,
+                          child: Text('Orçamento sem produto cadastrado'),
+                        ),
+                        ...productItems
+                            .where((item) => item.active)
+                            .map(
+                              (item) => DropdownMenuItem<int?>(
+                                value: item.id,
+                                child: Text('${item.code} • ${item.name}'),
+                              ),
+                            ),
+                      ],
+                      onChanged: (value) {
+                        setState(() {
+                          _productId = value;
+                          final matches = productItems.where(
+                            (item) => item.id == value,
+                          );
+                          if (matches.isNotEmpty) {
+                            final item = matches.first;
+                            _filamentId = item.filamentId;
+                            _laborMinutes.text = item.laborMinutes.toString();
+                            _additionalCost.text = item.additionalCost
+                                .toStringAsFixed(2)
+                                .replaceAll('.', ',');
+                            _calculation = null;
+                          }
+                        });
+                      },
                     ),
                     const SizedBox(height: 12),
                     DropdownButtonFormField<int>(
@@ -173,15 +218,42 @@ class _QuoteFormPageState extends ConsumerState<QuoteFormPage> {
                         );
 
                         setState(() {
-                          _calculation = const QuoteCalculator().calculate(
-                            project: project,
-                            filament: filament,
-                            settings: business,
-                            quantity: _integer(_quantity.text),
-                            laborMinutes: _integer(_laborMinutes.text),
-                            additionalCost: _number(_additionalCost.text),
-                            marginPercent: _number(_margin.text),
+                          final quantity = _integer(
+                            _quantity.text,
+                          ).clamp(1, 999999);
+                          final selectedProducts = productItems.where(
+                            (item) => item.id == _productId,
                           );
+                          if (selectedProducts.isNotEmpty) {
+                            final item = selectedProducts.first;
+                            final total = item.totalCost * quantity;
+                            final sale = item.suggestedPrice * quantity;
+                            _calculation = QuoteCalculation(
+                              materialCost: total,
+                              energyCost: 0,
+                              machineCost: 0,
+                              laborCost: 0,
+                              packagingCost: item.packagingCost * quantity,
+                              maintenanceCost: 0,
+                              failureCost: 0,
+                              additionalCost: item.additionalCost * quantity,
+                              totalCost: total,
+                              marginPercent: sale <= 0
+                                  ? 0
+                                  : ((sale - total) / sale) * 100,
+                              salePrice: sale,
+                            );
+                          } else {
+                            _calculation = const QuoteCalculator().calculate(
+                              project: project,
+                              filament: filament,
+                              settings: business,
+                              quantity: quantity,
+                              laborMinutes: _integer(_laborMinutes.text),
+                              additionalCost: _number(_additionalCost.text),
+                              marginPercent: _number(_margin.text),
+                            );
+                          }
                         });
                       },
                       icon: const Icon(Icons.calculate_outlined),
@@ -204,6 +276,7 @@ class _QuoteFormPageState extends ConsumerState<QuoteFormPage> {
                               .read(quoteRepositoryProvider)
                               .save(
                                 customerId: _customerId!,
+                                productId: _productId,
                                 projectId: _projectId!,
                                 filamentId: _filamentId!,
                                 quantity: _integer(_quantity.text),

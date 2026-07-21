@@ -1,12 +1,17 @@
+# ROADMAP — ERP Duo Print 3D
 
-## v0.8.3 — concluída
-- Reserva e consumo automático de filamento na produção.
+## Sprint 6 — Concluída
 
-## Próxima: v0.8.4
-- Indicadores de eficiência, perdas e custos reais no Dashboard.
+- 6.0.1 Cadastro e custeio automático.
+- 6.0.2 Galeria de imagens.
+- 6.0.3 Biblioteca de arquivos.
+- 6.0.4 Controle de versões.
+- 6.0.5 Integração com orçamento.
+- 6.0.6 Integração com produção.
 
-## v0.9.x — Produção Profissional
-- [x] Histórico e controle de manutenção das impressoras.
-- [ ] Agenda por impressora e faixa de horário.
-- [ ] Painel operacional em tempo real.
-- [ ] Indicadores de ocupação e produtividade.
+## Próximo ciclo
+
+- Relatórios por produto.
+- Importação assistida de dados do Bambu Studio.
+- Backup de imagens e arquivos vinculados.
+- Produtos mais vendidos e mais lucrativos no dashboard.

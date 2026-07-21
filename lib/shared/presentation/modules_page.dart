@@ -31,6 +31,12 @@ class ModulesPage extends StatelessWidget {
             onTap: () => context.go('/printers'),
           ),
           _ModuleCard(
+            title: 'Produtos',
+            subtitle: 'Catálogo e custos',
+            icon: Icons.inventory_2_outlined,
+            onTap: () => context.go('/products'),
+          ),
+          _ModuleCard(
             title: 'Projetos',
             subtitle: 'Modelos e versões',
             icon: Icons.view_in_ar_outlined,
@@ -62,7 +68,7 @@ class ModulesPage extends StatelessWidget {
           ),
           _ModuleCard(
             title: 'Agenda',
-            subtitle: 'Produção, prazos e alertas',
+            subtitle: 'Prazos e alertas',
             icon: Icons.event_note_outlined,
             onTap: () => context.go('/agenda'),
           ),

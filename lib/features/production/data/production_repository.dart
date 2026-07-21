@@ -60,6 +60,7 @@ class ProductionRepository {
 
   Future<void> save({
     required int projectId,
+    int? productId,
     int? printerId,
     int? filamentId,
     required int quantityPlanned,
@@ -88,13 +89,14 @@ class ProductionRepository {
     await _database.customStatement(
       '''
       INSERT INTO production_orders (
-        project_id, printer_id, filament_id, quantity_planned,
+        product_id, project_id, printer_id, filament_id, quantity_planned,
         quantity_produced, status, priority, scheduled_date,
         estimated_weight, estimated_minutes, estimated_material_cost,
         notes, created_at, updated_at
-      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
       ''',
       [
+        productId,
         projectId,
         printerId,
         filamentId,

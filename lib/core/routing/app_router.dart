@@ -18,6 +18,9 @@ import '../../features/printers/presentation/printers_page.dart';
 import '../../features/printers/presentation/printer_maintenances_page.dart';
 import '../../features/production/presentation/production_form_page.dart';
 import '../../features/production/presentation/production_page.dart';
+import '../../features/products/presentation/product_detail_page.dart';
+import '../../features/products/presentation/product_form_page.dart';
+import '../../features/products/presentation/products_page.dart';
 import '../../features/projects/presentation/project_form_page.dart';
 import '../../features/projects/presentation/projects_page.dart';
 import '../../features/quotes/presentation/quote_form_page.dart';
@@ -96,6 +99,28 @@ final appRouterProvider = Provider<GoRouter>((ref) {
                 path: ':id/maintenances',
                 builder: (context, state) => PrinterMaintenancesPage(
                   printerId: int.parse(state.pathParameters['id']!),
+                ),
+              ),
+            ],
+          ),
+          GoRoute(
+            path: '/products',
+            builder: (context, state) => const ProductsPage(),
+            routes: [
+              GoRoute(
+                path: 'new',
+                builder: (context, state) => const ProductFormPage(),
+              ),
+              GoRoute(
+                path: ':id',
+                builder: (context, state) => ProductDetailPage(
+                  productId: int.parse(state.pathParameters['id']!),
+                ),
+              ),
+              GoRoute(
+                path: ':id/edit',
+                builder: (context, state) => ProductFormPage(
+                  productId: int.tryParse(state.pathParameters['id'] ?? ''),
                 ),
               ),
             ],

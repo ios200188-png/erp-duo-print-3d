@@ -5,6 +5,8 @@ import 'package:intl/intl.dart';
 
 import '../../filaments/data/filament_repository.dart';
 import '../../printers/data/printer_repository.dart';
+import '../../products/data/product_repository.dart';
+import '../../products/domain/product.dart';
 import '../../projects/data/project_repository.dart';
 import '../data/production_repository.dart';
 
@@ -16,6 +18,7 @@ class ProductionFormPage extends ConsumerStatefulWidget {
 }
 
 class _ProductionFormPageState extends ConsumerState<ProductionFormPage> {
+  int? _productId;
   int? _projectId;
   int? _printerId;
   int? _filamentId;
@@ -44,41 +47,13 @@ class _ProductionFormPageState extends ConsumerState<ProductionFormPage> {
   }
 
   Future<void> _pickDate() async {
-    final current = _scheduledDate ?? DateTime.now();
     final selected = await showDatePicker(
       context: context,
-      initialDate: current,
+      initialDate: _scheduledDate ?? DateTime.now(),
       firstDate: DateTime.now().subtract(const Duration(days: 30)),
       lastDate: DateTime.now().add(const Duration(days: 730)),
     );
-    if (selected == null) return;
-    setState(() {
-      _scheduledDate = DateTime(
-        selected.year,
-        selected.month,
-        selected.day,
-        current.hour,
-        current.minute,
-      );
-    });
-  }
-
-  Future<void> _pickTime() async {
-    final current = _scheduledDate ?? DateTime.now();
-    final selected = await showTimePicker(
-      context: context,
-      initialTime: TimeOfDay.fromDateTime(current),
-    );
-    if (selected == null) return;
-    setState(() {
-      _scheduledDate = DateTime(
-        current.year,
-        current.month,
-        current.day,
-        selected.hour,
-        selected.minute,
-      );
-    });
+    if (selected != null) setState(() => _scheduledDate = selected);
   }
 
   Future<void> _save() async {
@@ -105,6 +80,7 @@ class _ProductionFormPageState extends ConsumerState<ProductionFormPage> {
           .read(productionRepositoryProvider)
           .save(
             projectId: _projectId!,
+            productId: _productId,
             printerId: _printerId,
             filamentId: _filamentId,
             quantityPlanned: _integer(_planned.text),
@@ -134,11 +110,11 @@ class _ProductionFormPageState extends ConsumerState<ProductionFormPage> {
 
   @override
   Widget build(BuildContext context) {
+    final products = ref.watch(productsProvider);
     final projects = ref.watch(projectsProvider);
     final printers = ref.watch(printersProvider);
     final filaments = ref.watch(filamentsProvider);
     final date = DateFormat('dd/MM/yyyy');
-    final time = DateFormat('HH:mm');
 
     return Scaffold(
       appBar: AppBar(title: const Text('Nova ordem de produção')),
@@ -151,213 +127,247 @@ class _ProductionFormPageState extends ConsumerState<ProductionFormPage> {
           data: (printerItems) => filaments.when(
             loading: () => const Center(child: CircularProgressIndicator()),
             error: (error, _) => Center(child: Text('Erro: $error')),
-            data: (filamentItems) => ListView(
-              padding: const EdgeInsets.all(20),
-              children: [
-                DropdownButtonFormField<int>(
-                  initialValue: _projectId,
-                  decoration: const InputDecoration(labelText: 'Projeto *'),
-                  items: projectItems
-                      .map(
-                        (item) => DropdownMenuItem(
-                          value: item.id,
-                          child: Text(
-                            item.version.isEmpty
-                                ? item.name
-                                : '${item.name} — ${item.version}',
+            data: (filamentItems) {
+              final productItems = products.asData?.value ?? <Product>[];
+              return ListView(
+                padding: const EdgeInsets.all(20),
+                children: [
+                  DropdownButtonFormField<int?>(
+                    initialValue: _productId,
+                    decoration: const InputDecoration(
+                      labelText: 'Produto inteligente',
+                      helperText:
+                          'Preenche impressora, filamento, peso e tempo.',
+                    ),
+                    items: [
+                      const DropdownMenuItem<int?>(
+                        value: null,
+                        child: Text('Ordem sem produto cadastrado'),
+                      ),
+                      ...productItems
+                          .where((item) => item.active)
+                          .map(
+                            (item) => DropdownMenuItem<int?>(
+                              value: item.id,
+                              child: Text('${item.code} • ${item.name}'),
+                            ),
                           ),
-                        ),
-                      )
-                      .toList(),
-                  onChanged: (value) {
-                    setState(() {
-                      _projectId = value;
-                      final matches = projectItems.where(
-                        (item) => item.id == value,
-                      );
-                      final project = matches.isEmpty ? null : matches.first;
-                      if (project != null) {
-                        _estimatedWeight.text =
-                            (project.estimatedWeight * _integer(_planned.text))
-                                .toStringAsFixed(1);
-                        _estimatedMinutes.text =
-                            (project.printMinutes * _integer(_planned.text))
-                                .toString();
-                      }
-                    });
-                  },
-                ),
-                const SizedBox(height: 12),
-                DropdownButtonFormField<int?>(
-                  initialValue: _printerId,
-                  decoration: const InputDecoration(labelText: 'Impressora'),
-                  items: [
-                    const DropdownMenuItem<int?>(
-                      value: null,
-                      child: Text('Definir depois'),
-                    ),
-                    ...printerItems.map(
-                      (item) => DropdownMenuItem<int?>(
-                        value: item.id,
-                        child: Text(item.name),
-                      ),
-                    ),
-                  ],
-                  onChanged: (value) => setState(() => _printerId = value),
-                ),
-                const SizedBox(height: 12),
-                DropdownButtonFormField<int>(
-                  initialValue: _filamentId,
-                  decoration: const InputDecoration(
-                    labelText: 'Filamento *',
-                    helperText:
-                        'O material será reservado ao iniciar a impressão.',
+                    ],
+                    onChanged: (value) {
+                      setState(() {
+                        _productId = value;
+                        final matches = productItems.where(
+                          (item) => item.id == value,
+                        );
+                        if (matches.isNotEmpty) {
+                          final item = matches.first;
+                          _printerId = item.printerId;
+                          _filamentId = item.filamentId;
+                          final quantity = _integer(
+                            _planned.text,
+                          ).clamp(1, 999999);
+                          _estimatedWeight.text =
+                              (item.estimatedWeight * quantity).toStringAsFixed(
+                                1,
+                              );
+                          _estimatedMinutes.text =
+                              (item.printMinutes * quantity).toString();
+                        }
+                      });
+                    },
                   ),
-                  items: filamentItems
-                      .map(
-                        (item) => DropdownMenuItem(
-                          value: item.id,
-                          child: Text(
-                            '${item.name} — ${item.availableWeight.toStringAsFixed(0)} g disponíveis',
+                  const SizedBox(height: 12),
+                  DropdownButtonFormField<int>(
+                    initialValue: _projectId,
+                    decoration: const InputDecoration(labelText: 'Projeto *'),
+                    items: projectItems
+                        .map(
+                          (item) => DropdownMenuItem(
+                            value: item.id,
+                            child: Text(
+                              item.version.isEmpty
+                                  ? item.name
+                                  : '${item.name} — ${item.version}',
+                            ),
                           ),
-                        ),
-                      )
-                      .toList(),
-                  onChanged: (value) => setState(() => _filamentId = value),
-                ),
-                const SizedBox(height: 12),
-                Row(
-                  children: [
-                    Expanded(
-                      child: TextField(
-                        controller: _planned,
-                        keyboardType: TextInputType.number,
-                        decoration: const InputDecoration(
-                          labelText: 'Quantidade planejada',
-                        ),
-                      ),
-                    ),
-                    const SizedBox(width: 12),
-                    Expanded(
-                      child: TextField(
-                        controller: _produced,
-                        keyboardType: TextInputType.number,
-                        decoration: const InputDecoration(
-                          labelText: 'Quantidade produzida',
-                        ),
-                      ),
-                    ),
-                  ],
-                ),
-                const SizedBox(height: 12),
-                Row(
-                  children: [
-                    Expanded(
-                      child: TextField(
-                        controller: _estimatedWeight,
-                        keyboardType: const TextInputType.numberWithOptions(
-                          decimal: true,
-                        ),
-                        decoration: const InputDecoration(
-                          labelText: 'Peso previsto total (g)',
-                        ),
-                      ),
-                    ),
-                    const SizedBox(width: 12),
-                    Expanded(
-                      child: TextField(
-                        controller: _estimatedMinutes,
-                        keyboardType: TextInputType.number,
-                        decoration: const InputDecoration(
-                          labelText: 'Tempo previsto (min)',
-                        ),
-                      ),
-                    ),
-                  ],
-                ),
-                const SizedBox(height: 12),
-                DropdownButtonFormField<String>(
-                  initialValue: _status,
-                  decoration: const InputDecoration(
-                    labelText: 'Status inicial',
-                  ),
-                  items: const [
-                    DropdownMenuItem(
-                      value: 'Aguardando',
-                      child: Text('Aguardando'),
-                    ),
-                    DropdownMenuItem(
-                      value: 'Preparando',
-                      child: Text('Preparando'),
-                    ),
-                  ],
-                  onChanged: (value) =>
-                      setState(() => _status = value ?? 'Aguardando'),
-                ),
-                const SizedBox(height: 12),
-                DropdownButtonFormField<String>(
-                  initialValue: _priority,
-                  decoration: const InputDecoration(labelText: 'Prioridade'),
-                  items: const [
-                    DropdownMenuItem(value: 'Baixa', child: Text('Baixa')),
-                    DropdownMenuItem(value: 'Normal', child: Text('Normal')),
-                    DropdownMenuItem(value: 'Alta', child: Text('Alta')),
-                    DropdownMenuItem(value: 'Urgente', child: Text('Urgente')),
-                  ],
-                  onChanged: (value) =>
-                      setState(() => _priority = value ?? 'Normal'),
-                ),
-                const SizedBox(height: 12),
-                Row(
-                  children: [
-                    Expanded(
-                      child: OutlinedButton.icon(
-                        onPressed: _pickDate,
-                        icon: const Icon(Icons.calendar_month_outlined),
-                        label: Text(
-                          _scheduledDate == null
-                              ? 'Definir data'
-                              : date.format(_scheduledDate!),
-                        ),
-                      ),
-                    ),
-                    const SizedBox(width: 12),
-                    Expanded(
-                      child: OutlinedButton.icon(
-                        onPressed: _pickTime,
-                        icon: const Icon(Icons.schedule_outlined),
-                        label: Text(
-                          _scheduledDate == null
-                              ? 'Definir horário'
-                              : time.format(_scheduledDate!),
-                        ),
-                      ),
-                    ),
-                  ],
-                ),
-                const SizedBox(height: 12),
-                TextField(
-                  controller: _notes,
-                  minLines: 3,
-                  maxLines: 5,
-                  decoration: const InputDecoration(labelText: 'Observações'),
-                ),
-                const SizedBox(height: 20),
-                FilledButton.icon(
-                  onPressed: _saving ? null : _save,
-                  icon: _saving
-                      ? const SizedBox.square(
-                          dimension: 18,
-                          child: CircularProgressIndicator(strokeWidth: 2),
                         )
-                      : const Icon(Icons.save_outlined),
-                  label: const Padding(
-                    padding: EdgeInsets.symmetric(vertical: 14),
-                    child: Text('SALVAR ORDEM'),
+                        .toList(),
+                    onChanged: (value) {
+                      setState(() {
+                        _projectId = value;
+                        final matches = projectItems.where(
+                          (item) => item.id == value,
+                        );
+                        final project = matches.isEmpty ? null : matches.first;
+                        if (project != null) {
+                          _estimatedWeight.text =
+                              (project.estimatedWeight *
+                                      _integer(_planned.text))
+                                  .toStringAsFixed(1);
+                          _estimatedMinutes.text =
+                              (project.printMinutes * _integer(_planned.text))
+                                  .toString();
+                        }
+                      });
+                    },
                   ),
-                ),
-              ],
-            ),
+                  const SizedBox(height: 12),
+                  DropdownButtonFormField<int?>(
+                    initialValue: _printerId,
+                    decoration: const InputDecoration(labelText: 'Impressora'),
+                    items: [
+                      const DropdownMenuItem<int?>(
+                        value: null,
+                        child: Text('Definir depois'),
+                      ),
+                      ...printerItems.map(
+                        (item) => DropdownMenuItem<int?>(
+                          value: item.id,
+                          child: Text(item.name),
+                        ),
+                      ),
+                    ],
+                    onChanged: (value) => setState(() => _printerId = value),
+                  ),
+                  const SizedBox(height: 12),
+                  DropdownButtonFormField<int>(
+                    initialValue: _filamentId,
+                    decoration: const InputDecoration(
+                      labelText: 'Filamento *',
+                      helperText:
+                          'O material será reservado ao iniciar a impressão.',
+                    ),
+                    items: filamentItems
+                        .map(
+                          (item) => DropdownMenuItem(
+                            value: item.id,
+                            child: Text(
+                              '${item.name} — ${item.availableWeight.toStringAsFixed(0)} g disponíveis',
+                            ),
+                          ),
+                        )
+                        .toList(),
+                    onChanged: (value) => setState(() => _filamentId = value),
+                  ),
+                  const SizedBox(height: 12),
+                  Row(
+                    children: [
+                      Expanded(
+                        child: TextField(
+                          controller: _planned,
+                          keyboardType: TextInputType.number,
+                          decoration: const InputDecoration(
+                            labelText: 'Quantidade planejada',
+                          ),
+                        ),
+                      ),
+                      const SizedBox(width: 12),
+                      Expanded(
+                        child: TextField(
+                          controller: _produced,
+                          keyboardType: TextInputType.number,
+                          decoration: const InputDecoration(
+                            labelText: 'Quantidade produzida',
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 12),
+                  Row(
+                    children: [
+                      Expanded(
+                        child: TextField(
+                          controller: _estimatedWeight,
+                          keyboardType: const TextInputType.numberWithOptions(
+                            decimal: true,
+                          ),
+                          decoration: const InputDecoration(
+                            labelText: 'Peso previsto total (g)',
+                          ),
+                        ),
+                      ),
+                      const SizedBox(width: 12),
+                      Expanded(
+                        child: TextField(
+                          controller: _estimatedMinutes,
+                          keyboardType: TextInputType.number,
+                          decoration: const InputDecoration(
+                            labelText: 'Tempo previsto (min)',
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 12),
+                  DropdownButtonFormField<String>(
+                    initialValue: _status,
+                    decoration: const InputDecoration(
+                      labelText: 'Status inicial',
+                    ),
+                    items: const [
+                      DropdownMenuItem(
+                        value: 'Aguardando',
+                        child: Text('Aguardando'),
+                      ),
+                      DropdownMenuItem(
+                        value: 'Preparando',
+                        child: Text('Preparando'),
+                      ),
+                    ],
+                    onChanged: (value) =>
+                        setState(() => _status = value ?? 'Aguardando'),
+                  ),
+                  const SizedBox(height: 12),
+                  DropdownButtonFormField<String>(
+                    initialValue: _priority,
+                    decoration: const InputDecoration(labelText: 'Prioridade'),
+                    items: const [
+                      DropdownMenuItem(value: 'Baixa', child: Text('Baixa')),
+                      DropdownMenuItem(value: 'Normal', child: Text('Normal')),
+                      DropdownMenuItem(value: 'Alta', child: Text('Alta')),
+                      DropdownMenuItem(
+                        value: 'Urgente',
+                        child: Text('Urgente'),
+                      ),
+                    ],
+                    onChanged: (value) =>
+                        setState(() => _priority = value ?? 'Normal'),
+                  ),
+                  const SizedBox(height: 12),
+                  OutlinedButton.icon(
+                    onPressed: _pickDate,
+                    icon: const Icon(Icons.calendar_month_outlined),
+                    label: Text(
+                      _scheduledDate == null
+                          ? 'Definir data prevista'
+                          : 'Prevista para ${date.format(_scheduledDate!)}',
+                    ),
+                  ),
+                  const SizedBox(height: 12),
+                  TextField(
+                    controller: _notes,
+                    minLines: 3,
+                    maxLines: 5,
+                    decoration: const InputDecoration(labelText: 'Observações'),
+                  ),
+                  const SizedBox(height: 20),
+                  FilledButton.icon(
+                    onPressed: _saving ? null : _save,
+                    icon: _saving
+                        ? const SizedBox.square(
+                            dimension: 18,
+                            child: CircularProgressIndicator(strokeWidth: 2),
+                          )
+                        : const Icon(Icons.save_outlined),
+                    label: const Padding(
+                      padding: EdgeInsets.symmetric(vertical: 14),
+                      child: Text('SALVAR ORDEM'),
+                    ),
+                  ),
+                ],
+              );
+            },
           ),
         ),
       ),
