@@ -34,8 +34,10 @@ class QuoteCalculator {
         packagingCost +
         additionalCost;
 
-    final failureCost = subtotal * (settings.failurePercent / 100);
-    final totalCost = subtotal + failureCost;
+    final maintenanceCost = subtotal * (settings.maintenancePercent / 100);
+    final failureBase = subtotal + maintenanceCost;
+    final failureCost = failureBase * (settings.failurePercent / 100);
+    final totalCost = failureBase + failureCost;
     final salePrice = totalCost * (1 + (marginPercent / 100));
 
     return QuoteCalculation(
@@ -44,6 +46,7 @@ class QuoteCalculator {
       machineCost: machineCost,
       laborCost: laborCost,
       packagingCost: packagingCost,
+      maintenanceCost: maintenanceCost,
       failureCost: failureCost,
       additionalCost: additionalCost,
       totalCost: totalCost,

@@ -26,6 +26,7 @@ class _BusinessSettingsPageState extends ConsumerState<BusinessSettingsPage> {
   final _labor = TextEditingController();
   final _machine = TextEditingController();
   final _packaging = TextEditingController();
+  final _maintenance = TextEditingController();
   final _failure = TextEditingController();
   final _margin = TextEditingController();
   bool _loaded = false;
@@ -48,6 +49,9 @@ class _BusinessSettingsPageState extends ConsumerState<BusinessSettingsPage> {
     _machine.text = value.machineHour.toStringAsFixed(2).replaceAll('.', ',');
     _packaging.text = value.packagingCost
         .toStringAsFixed(2)
+        .replaceAll('.', ',');
+    _maintenance.text = value.maintenancePercent
+        .toStringAsFixed(1)
         .replaceAll('.', ',');
     _failure.text = value.failurePercent
         .toStringAsFixed(1)
@@ -75,6 +79,7 @@ class _BusinessSettingsPageState extends ConsumerState<BusinessSettingsPage> {
             laborHour: _number(_labor.text),
             machineHour: _number(_machine.text),
             packagingCost: _number(_packaging.text),
+            maintenancePercent: _number(_maintenance.text),
             failurePercent: _number(_failure.text),
             idealMarginPercent: _number(_margin.text),
           ),
@@ -140,7 +145,16 @@ class _BusinessSettingsPageState extends ConsumerState<BusinessSettingsPage> {
                   'Custo padrão da embalagem (R\$) *',
                   number: true,
                 ),
-                _field(_failure, 'Percentual de falhas (%) *', number: true),
+                _field(
+                  _maintenance,
+                  'Reserva para manutenção (%) *',
+                  number: true,
+                ),
+                _field(
+                  _failure,
+                  'Percentual de perdas/falhas (%) *',
+                  number: true,
+                ),
                 _field(_margin, 'Margem ideal (%) *', number: true),
                 const SizedBox(height: 8),
                 FilledButton.icon(

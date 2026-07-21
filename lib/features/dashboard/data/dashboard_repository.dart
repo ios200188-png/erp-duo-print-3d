@@ -81,7 +81,7 @@ class DashboardRepository {
           '''
       SELECT
         (SELECT COUNT(*) FROM production_orders
-          WHERE status NOT IN ('Finalizada', 'Cancelada')) AS open_production,
+          WHERE status NOT IN ('Concluído', 'Cancelada')) AS open_production,
         (SELECT COUNT(*) FROM quotes q
           LEFT JOIN invoices i ON i.quote_id = q.id
           WHERE q.status = 'Produzido' AND i.id IS NULL) AS awaiting_billing,

@@ -104,9 +104,10 @@ class QuoteRepository {
       INSERT INTO quotes (
         customer_id, project_id, filament_id, quantity, labor_minutes,
         additional_cost, material_cost, energy_cost, machine_cost,
-        labor_cost, packaging_cost, failure_cost, total_cost,
-        margin_percent, sale_price, status, notes, created_at, updated_at
-      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+        labor_cost, packaging_cost, maintenance_cost, failure_cost,
+        total_cost, margin_percent, sale_price, status, notes,
+        created_at, updated_at
+      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
       ''',
       [
         customerId,
@@ -120,6 +121,7 @@ class QuoteRepository {
         calculation.machineCost,
         calculation.laborCost,
         calculation.packagingCost,
+        calculation.maintenanceCost,
         calculation.failureCost,
         calculation.totalCost,
         calculation.marginPercent,
@@ -164,7 +166,7 @@ class QuoteRepository {
         INSERT OR IGNORE INTO production_orders (
           quote_id, project_id, quantity_planned, quantity_produced,
           status, priority, notes, created_at, updated_at
-        ) VALUES (?, ?, ?, 0, 'Planejada', 'Normal', ?, ?, ?)
+        ) VALUES (?, ?, ?, 0, 'Aguardando', 'Normal', ?, ?, ?)
         ''',
         [
           quoteId,

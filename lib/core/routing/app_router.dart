@@ -9,11 +9,13 @@ import '../../features/customers/presentation/customers_page.dart';
 import '../../features/dashboard/presentation/dashboard_page.dart';
 import '../../features/filaments/presentation/filament_form_page.dart';
 import '../../features/filaments/presentation/filaments_page.dart';
+import '../../features/filaments/presentation/filament_movements_page.dart';
 import '../../features/finance/presentation/cash_flow_page.dart';
 import '../../features/finance/presentation/finance_form_page.dart';
 import '../../features/finance/presentation/finance_page.dart';
 import '../../features/printers/presentation/printer_form_page.dart';
 import '../../features/printers/presentation/printers_page.dart';
+import '../../features/printers/presentation/printer_maintenances_page.dart';
 import '../../features/production/presentation/production_form_page.dart';
 import '../../features/production/presentation/production_page.dart';
 import '../../features/projects/presentation/project_form_page.dart';
@@ -65,6 +67,10 @@ final appRouterProvider = Provider<GoRouter>((ref) {
                 builder: (context, state) => const FilamentFormPage(),
               ),
               GoRoute(
+                path: 'movements',
+                builder: (context, state) => const FilamentMovementsPage(),
+              ),
+              GoRoute(
                 path: ':id/edit',
                 builder: (context, state) => FilamentFormPage(
                   filamentId: int.tryParse(state.pathParameters['id'] ?? ''),
@@ -84,6 +90,12 @@ final appRouterProvider = Provider<GoRouter>((ref) {
                 path: ':id/edit',
                 builder: (context, state) => PrinterFormPage(
                   printerId: int.tryParse(state.pathParameters['id'] ?? ''),
+                ),
+              ),
+              GoRoute(
+                path: ':id/maintenances',
+                builder: (context, state) => PrinterMaintenancesPage(
+                  printerId: int.parse(state.pathParameters['id']!),
                 ),
               ),
             ],

@@ -62,7 +62,7 @@ class ModulesPage extends StatelessWidget {
           ),
           _ModuleCard(
             title: 'Agenda',
-            subtitle: 'Prazos e alertas',
+            subtitle: 'Produção, prazos e alertas',
             icon: Icons.event_note_outlined,
             onTap: () => context.go('/agenda'),
           ),

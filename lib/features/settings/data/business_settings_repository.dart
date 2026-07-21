@@ -36,7 +36,8 @@ class BusinessSettingsRepository {
       SET company_name = ?, whatsapp = ?, document = ?, email = ?,
           address = ?, city = ?, kwh_price = ?, printer_power_w = ?,
           labor_hour = ?, machine_hour = ?, packaging_cost = ?,
-          failure_percent = ?, ideal_margin_percent = ?, updated_at = ?
+          maintenance_percent = ?, failure_percent = ?,
+          ideal_margin_percent = ?, updated_at = ?
       WHERE id = 1
       ''',
       [
@@ -51,6 +52,7 @@ class BusinessSettingsRepository {
         settings.laborHour,
         settings.machineHour,
         settings.packagingCost,
+        settings.maintenancePercent,
         settings.failurePercent,
         settings.idealMarginPercent,
         DateTime.now().millisecondsSinceEpoch,

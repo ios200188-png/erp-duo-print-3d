@@ -50,6 +50,28 @@ class AppDatabase extends GeneratedDatabase {
       )
     ''');
 
+    await _ensureColumn(
+      'filaments',
+      'reserved_weight',
+      'REAL NOT NULL DEFAULT 0',
+    );
+
+    await customStatement('''
+      CREATE TABLE IF NOT EXISTS filament_movements (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        filament_id INTEGER NOT NULL,
+        type TEXT NOT NULL,
+        quantity REAL NOT NULL,
+        balance_before REAL NOT NULL,
+        balance_after REAL NOT NULL,
+        unit_cost REAL NOT NULL DEFAULT 0,
+        reason TEXT NOT NULL DEFAULT '',
+        production_order_id INTEGER,
+        created_at INTEGER NOT NULL,
+        FOREIGN KEY(filament_id) REFERENCES filaments(id)
+      )
+    ''');
+
     await customStatement('''
       CREATE TABLE IF NOT EXISTS printers (
         id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -66,6 +88,22 @@ class AppDatabase extends GeneratedDatabase {
         notes TEXT NOT NULL DEFAULT '',
         created_at INTEGER NOT NULL,
         updated_at INTEGER NOT NULL
+      )
+    ''');
+
+    await customStatement('''
+      CREATE TABLE IF NOT EXISTS printer_maintenances (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        printer_id INTEGER NOT NULL,
+        type TEXT NOT NULL,
+        description TEXT NOT NULL DEFAULT '',
+        printer_hours REAL NOT NULL DEFAULT 0,
+        cost REAL NOT NULL DEFAULT 0,
+        performed_at INTEGER NOT NULL,
+        next_due_hours REAL,
+        notes TEXT NOT NULL DEFAULT '',
+        created_at INTEGER NOT NULL,
+        FOREIGN KEY(printer_id) REFERENCES printers(id)
       )
     ''');
 
@@ -99,18 +137,28 @@ class AppDatabase extends GeneratedDatabase {
         labor_hour REAL NOT NULL DEFAULT 20,
         machine_hour REAL NOT NULL DEFAULT 3,
         packaging_cost REAL NOT NULL DEFAULT 1.5,
+        maintenance_percent REAL NOT NULL DEFAULT 3,
         failure_percent REAL NOT NULL DEFAULT 5,
         ideal_margin_percent REAL NOT NULL DEFAULT 60,
         updated_at INTEGER NOT NULL
       )
     ''');
 
+    // Migra primeiro as instalações antigas. O INSERT abaixo usa
+    // maintenance_percent e falhava antes do runApp quando a coluna ainda
+    // não existia no banco já instalado.
+    await _ensureColumn(
+      'business_settings',
+      'maintenance_percent',
+      'REAL NOT NULL DEFAULT 3',
+    );
+
     await customStatement('''
       INSERT OR IGNORE INTO business_settings (
         id, company_name, whatsapp, kwh_price, printer_power_w,
-        labor_hour, machine_hour, packaging_cost, failure_percent,
-        ideal_margin_percent, updated_at
-      ) VALUES (1, 'Duo Print 3D', '', 0.85, 120, 20, 3, 1.5, 5, 60, 0)
+        labor_hour, machine_hour, packaging_cost, maintenance_percent,
+        failure_percent, ideal_margin_percent, updated_at
+      ) VALUES (1, 'Duo Print 3D', '', 0.85, 120, 20, 3, 1.5, 3, 5, 60, 0)
     ''');
 
     await _ensureColumn(
@@ -133,7 +181,6 @@ class AppDatabase extends GeneratedDatabase {
       'city',
       "TEXT NOT NULL DEFAULT ''",
     );
-
     await customStatement('''
       CREATE TABLE IF NOT EXISTS quotes (
         id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -148,6 +195,7 @@ class AppDatabase extends GeneratedDatabase {
         machine_cost REAL NOT NULL DEFAULT 0,
         labor_cost REAL NOT NULL DEFAULT 0,
         packaging_cost REAL NOT NULL DEFAULT 0,
+        maintenance_cost REAL NOT NULL DEFAULT 0,
         failure_cost REAL NOT NULL DEFAULT 0,
         total_cost REAL NOT NULL DEFAULT 0,
         margin_percent REAL NOT NULL DEFAULT 0,
@@ -170,7 +218,7 @@ class AppDatabase extends GeneratedDatabase {
         printer_id INTEGER,
         quantity_planned INTEGER NOT NULL DEFAULT 1,
         quantity_produced INTEGER NOT NULL DEFAULT 0,
-        status TEXT NOT NULL DEFAULT 'Planejada',
+        status TEXT NOT NULL DEFAULT 'Aguardando',
         priority TEXT NOT NULL DEFAULT 'Normal',
         scheduled_date INTEGER,
         started_at INTEGER,
@@ -183,6 +231,53 @@ class AppDatabase extends GeneratedDatabase {
         FOREIGN KEY(printer_id) REFERENCES printers(id)
       )
     ''');
+
+    await _ensureColumn('production_orders', 'filament_id', 'INTEGER');
+    await _ensureColumn(
+      'production_orders',
+      'estimated_weight',
+      'REAL NOT NULL DEFAULT 0',
+    );
+    await _ensureColumn(
+      'production_orders',
+      'actual_weight',
+      'REAL NOT NULL DEFAULT 0',
+    );
+    await _ensureColumn(
+      'production_orders',
+      'estimated_minutes',
+      'INTEGER NOT NULL DEFAULT 0',
+    );
+    await _ensureColumn(
+      'production_orders',
+      'actual_minutes',
+      'INTEGER NOT NULL DEFAULT 0',
+    );
+    await _ensureColumn(
+      'production_orders',
+      'reserved_material_weight',
+      'REAL NOT NULL DEFAULT 0',
+    );
+    await _ensureColumn(
+      'production_orders',
+      'estimated_material_cost',
+      'REAL NOT NULL DEFAULT 0',
+    );
+    await _ensureColumn(
+      'production_orders',
+      'actual_material_cost',
+      'REAL NOT NULL DEFAULT 0',
+    );
+
+    await customStatement("""
+      UPDATE production_orders
+      SET status = CASE status
+        WHEN 'Planejada' THEN 'Aguardando'
+        WHEN 'Finalizada' THEN 'Concluído'
+        ELSE status
+      END
+      WHERE status IN ('Planejada', 'Finalizada')
+    """);
 
     await customStatement('''
       CREATE TABLE IF NOT EXISTS financial_entries (
@@ -229,6 +324,11 @@ class AppDatabase extends GeneratedDatabase {
     ''');
 
     await _ensureColumn('quotes', 'delivery_date', 'INTEGER');
+    await _ensureColumn(
+      'quotes',
+      'maintenance_cost',
+      'REAL NOT NULL DEFAULT 0',
+    );
 
     await customStatement('''
       CREATE TABLE IF NOT EXISTS invoices (
@@ -274,8 +374,16 @@ class AppDatabase extends GeneratedDatabase {
       'ON production_orders(scheduled_date)',
     );
     await customStatement(
+      'CREATE INDEX IF NOT EXISTS idx_production_filament '
+      'ON production_orders(filament_id)',
+    );
+    await customStatement(
       'CREATE INDEX IF NOT EXISTS idx_printers_maintenance '
       'ON printers(printed_hours, maintenance_interval)',
+    );
+    await customStatement(
+      'CREATE INDEX IF NOT EXISTS idx_filament_movements_filament_date '
+      'ON filament_movements(filament_id, created_at DESC)',
     );
   }
 

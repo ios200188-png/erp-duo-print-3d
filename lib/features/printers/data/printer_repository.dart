@@ -135,6 +135,14 @@ class PrinterRepository {
   }
 
   Future<void> delete(int id) async {
-    await _database.customStatement('DELETE FROM printers WHERE id = ?', [id]);
+    await _database.transaction(() async {
+      await _database.customStatement(
+        'DELETE FROM printer_maintenances WHERE printer_id = ?',
+        [id],
+      );
+      await _database.customStatement('DELETE FROM printers WHERE id = ?', [
+        id,
+      ]);
+    });
   }
 }

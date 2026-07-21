@@ -99,7 +99,14 @@ class _FilamentFormPageState extends ConsumerState<FilamentFormPage> {
                 _field(_brand, 'Marca'),
                 _field(_color, 'Cor'),
                 _field(_initialWeight, 'Peso inicial (g) *', number: true),
-                _field(_currentWeight, 'Peso restante (g) *', number: true),
+                _field(
+                  _currentWeight,
+                  widget.filamentId == null
+                      ? 'Estoque inicial (g) *'
+                      : 'Estoque físico (use Movimentar Estoque)',
+                  number: true,
+                  readOnly: widget.filamentId != null,
+                ),
                 _field(_price, 'Valor pago (R\$) *', number: true),
                 _field(_minimum, 'Estoque mínimo (g)', number: true),
                 _field(_supplier, 'Fornecedor'),
@@ -126,11 +133,13 @@ class _FilamentFormPageState extends ConsumerState<FilamentFormPage> {
     String label, {
     bool number = false,
     int lines = 1,
+    bool readOnly = false,
   }) {
     return Padding(
       padding: const EdgeInsets.only(bottom: 12),
       child: TextFormField(
         controller: controller,
+        readOnly: readOnly,
         minLines: lines,
         maxLines: lines,
         keyboardType: number

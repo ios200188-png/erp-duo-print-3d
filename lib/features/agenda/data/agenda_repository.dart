@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../core/database/app_database.dart';
 import '../domain/agenda_item.dart';
+import '../domain/production_schedule_item.dart';
 
 final agendaRepositoryProvider = Provider<AgendaRepository>((ref) {
   return AgendaRepository(ref.watch(appDatabaseProvider));
@@ -159,4 +160,83 @@ class AgendaRepository {
 
     return items;
   }
+
+  Future<List<ProductionScheduleItem>> findProductionSchedule({
+    required DateTime start,
+    required DateTime end,
+  }) async {
+    final rows = await _database
+        .customSelect(
+          '''
+      SELECT po.id, p.name AS project_name,
+             COALESCE(pr.name, 'Sem impressora') AS printer_name,
+             po.status, po.priority, po.scheduled_date,
+             po.estimated_minutes
+      FROM production_orders po
+      INNER JOIN projects p ON p.id = po.project_id
+      LEFT JOIN printers pr ON pr.id = po.printer_id
+      WHERE po.scheduled_date IS NOT NULL
+        AND po.status <> 'Cancelada'
+        AND po.scheduled_date >= ?
+        AND po.scheduled_date < ?
+      ORDER BY printer_name, po.scheduled_date, po.priority DESC
+      ''',
+          variables: [
+            Variable<int>(start.millisecondsSinceEpoch),
+            Variable<int>(end.millisecondsSinceEpoch),
+          ],
+          readsFrom: const {},
+        )
+        .get();
+
+    final raw = rows.map((row) {
+      final scheduled = DateTime.fromMillisecondsSinceEpoch(
+        row.read<int>('scheduled_date'),
+      );
+      final minutes = row.read<int>('estimated_minutes');
+      return ProductionScheduleItem(
+        id: row.read<int>('id'),
+        projectName: row.read<String>('project_name'),
+        printerName: row.read<String>('printer_name'),
+        status: row.read<String>('status'),
+        priority: row.read<String>('priority'),
+        start: scheduled,
+        end: scheduled.add(Duration(minutes: minutes <= 0 ? 1 : minutes)),
+        estimatedMinutes: minutes,
+        isConflict: false,
+      );
+    }).toList();
+
+    return raw.map((item) {
+      final conflict = raw.any((other) {
+        if (item.printerName == 'Sem impressora' ||
+            other.id == item.id ||
+            other.printerName != item.printerName) {
+          return false;
+        }
+        return item.start.isBefore(other.end) && item.end.isAfter(other.start);
+      });
+      return ProductionScheduleItem(
+        id: item.id,
+        projectName: item.projectName,
+        printerName: item.printerName,
+        status: item.status,
+        priority: item.priority,
+        start: item.start,
+        end: item.end,
+        estimatedMinutes: item.estimatedMinutes,
+        isConflict: conflict,
+      );
+    }).toList();
+  }
 }
+
+final productionScheduleProvider =
+    FutureProvider.family<
+      List<ProductionScheduleItem>,
+      ProductionScheduleRange
+    >((ref, range) {
+      return ref
+          .watch(agendaRepositoryProvider)
+          .findProductionSchedule(start: range.start, end: range.end);
+    });

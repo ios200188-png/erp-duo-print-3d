@@ -192,7 +192,11 @@ class _QuoteFormPageState extends ConsumerState<QuoteFormPage> {
                     ),
                     if (_calculation != null) ...[
                       const SizedBox(height: 18),
-                      _ResultCard(calculation: _calculation!, money: money),
+                      _ResultCard(
+                        calculation: _calculation!,
+                        money: money,
+                        quantity: _integer(_quantity.text),
+                      ),
                       const SizedBox(height: 12),
                       FilledButton.icon(
                         onPressed: () async {
@@ -254,10 +258,15 @@ class _QuoteFormPageState extends ConsumerState<QuoteFormPage> {
 }
 
 class _ResultCard extends StatelessWidget {
-  const _ResultCard({required this.calculation, required this.money});
+  const _ResultCard({
+    required this.calculation,
+    required this.money,
+    required this.quantity,
+  });
 
   final QuoteCalculation calculation;
   final NumberFormat money;
+  final int quantity;
 
   @override
   Widget build(BuildContext context) {
@@ -271,11 +280,25 @@ class _ResultCard extends StatelessWidget {
             _row('Máquina', calculation.machineCost),
             _row('Mão de obra', calculation.laborCost),
             _row('Embalagem', calculation.packagingCost),
-            _row('Falhas', calculation.failureCost),
+            _row('Reserva de manutenção', calculation.maintenanceCost),
+            _row('Perdas e falhas', calculation.failureCost),
             _row('Adicionais', calculation.additionalCost),
             const Divider(height: 28),
             _row('Custo total', calculation.totalCost, strong: true),
             _row('Lucro estimado', calculation.profit, strong: true),
+            _row('Custo por unidade', calculation.unitCost(quantity)),
+            _row('Preço por unidade', calculation.unitPrice(quantity)),
+            const SizedBox(height: 6),
+            Align(
+              alignment: Alignment.centerLeft,
+              child: Text(
+                'Margem real sobre a venda: '
+                '${calculation.profitPercent.toStringAsFixed(1)}%',
+                style: Theme.of(
+                  context,
+                ).textTheme.bodyMedium?.copyWith(fontWeight: FontWeight.w700),
+              ),
+            ),
             const SizedBox(height: 8),
             Text(
               money.format(calculation.salePrice),

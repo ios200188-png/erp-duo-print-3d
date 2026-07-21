@@ -34,17 +34,52 @@ class PrintersPage extends ConsumerWidget {
                   subtitle: Text(
                     '${item.manufacturer} ${item.model}\n'
                     '${item.printedHours.toStringAsFixed(0)} h impressas • '
-                    '${item.hoursUntilMaintenance.toStringAsFixed(0)} h até manutenção',
+                    '${item.hoursUntilMaintenance.toStringAsFixed(0)} h até manutenção'
+                    '${item.hoursUntilMaintenance <= 50 ? ' • ATENÇÃO' : ''}',
                   ),
                   isThreeLine: true,
                   onTap: () => context.go('/printers/${item.id}/edit'),
-                  trailing: IconButton(
-                    icon: const Icon(Icons.delete_outline),
-                    onPressed: () async {
-                      await ref.read(printerRepositoryProvider).delete(item.id);
-                      ref.invalidate(printersProvider);
-                      ref.invalidate(printerCountProvider);
+                  trailing: PopupMenuButton<String>(
+                    onSelected: (value) async {
+                      if (value == 'maintenance') {
+                        context.go('/printers/${item.id}/maintenances');
+                        return;
+                      }
+                      if (value == 'edit') {
+                        context.go('/printers/${item.id}/edit');
+                        return;
+                      }
+                      if (value == 'delete') {
+                        await ref
+                            .read(printerRepositoryProvider)
+                            .delete(item.id);
+                        ref.invalidate(printersProvider);
+                        ref.invalidate(printerCountProvider);
+                      }
                     },
+                    itemBuilder: (context) => const [
+                      PopupMenuItem(
+                        value: 'maintenance',
+                        child: ListTile(
+                          leading: Icon(Icons.build_circle_outlined),
+                          title: Text('Manutenções'),
+                        ),
+                      ),
+                      PopupMenuItem(
+                        value: 'edit',
+                        child: ListTile(
+                          leading: Icon(Icons.edit_outlined),
+                          title: Text('Editar'),
+                        ),
+                      ),
+                      PopupMenuItem(
+                        value: 'delete',
+                        child: ListTile(
+                          leading: Icon(Icons.delete_outline),
+                          title: Text('Excluir'),
+                        ),
+                      ),
+                    ],
                   ),
                 ),
               );

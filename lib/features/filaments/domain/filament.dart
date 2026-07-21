@@ -7,6 +7,7 @@ class Filament {
     required this.color,
     required this.initialWeight,
     required this.currentWeight,
+    required this.reservedWeight,
     required this.purchasePrice,
     required this.minimumStock,
     required this.supplier,
@@ -20,6 +21,7 @@ class Filament {
   final String color;
   final double initialWeight;
   final double currentWeight;
+  final double reservedWeight;
   final double purchasePrice;
   final double minimumStock;
   final String supplier;
@@ -28,7 +30,10 @@ class Filament {
   double get costPerGram =>
       initialWeight <= 0 ? 0 : purchasePrice / initialWeight;
 
-  bool get lowStock => currentWeight <= minimumStock;
+  double get availableWeight =>
+      (currentWeight - reservedWeight).clamp(0, double.infinity).toDouble();
+
+  bool get lowStock => availableWeight <= minimumStock;
 
   factory Filament.fromMap(Map<String, Object?> map) {
     return Filament(
@@ -39,6 +44,7 @@ class Filament {
       color: map['color']! as String,
       initialWeight: (map['initial_weight']! as num).toDouble(),
       currentWeight: (map['current_weight']! as num).toDouble(),
+      reservedWeight: ((map['reserved_weight'] as num?) ?? 0).toDouble(),
       purchasePrice: (map['purchase_price']! as num).toDouble(),
       minimumStock: (map['minimum_stock']! as num).toDouble(),
       supplier: map['supplier']! as String,
